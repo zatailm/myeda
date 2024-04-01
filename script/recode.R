@@ -84,8 +84,8 @@ l <- l[c(
 
 ##----preprocessing--------------------------------------
 acled <- acled %>%
-  mutate(across(c(ADMIN2, ADMIN3, ACTOR2), ~ ifelse(is.na(.), 'n/a', .))) %>%
-  mutate(across(c(INTER1, INTER2), ~ ifelse(. == 0, 'n/a', as.character(.)))) %>%
+  mutate(across(c(ADMIN2, ADMIN3, ACTOR2), ~ ifelse(is.na(.), NA, .))) %>%
+  mutate(across(c(INTER1, INTER2), ~ ifelse(. == 0, NA, as.character(.)))) %>%
   mutate(across(c(ACTOR1, ACTOR2), ~ str_replace_all(., ' \\s*\\([^\\)]+\\)', ''))) %>%
   mutate(across(c(INTER1, INTER2), ~ recode(as.character(.), !!!inter))) %>%
   mutate(INTERACTION = recode(as.character(INTERACTION), !!!interaction)) %>%

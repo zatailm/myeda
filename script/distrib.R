@@ -524,3 +524,48 @@ pnet <- ggraph(graph_data, layout = "auto") +
 
 ptil <- ggplot(actor_interactions, aes(INTER1, INTER2, fill = freq)) + 
   geom_tile() + scale_fill_viridis(discrete = F)
+
+##---
+df_cas_act <- acled %>%
+  count(INTER1, INTER2, wt = FATALITIES) %>%
+  mutate(actors = ifelse(is.na(INTER2), INTER1, INTER2), total = n) %>%
+  group_by(actors) %>%
+  summarize(total = sum(total)) %>%
+  arrange(desc(total)) %>%
+  filter(total > 0) 
+
+df_act <- acled %>%
+  count(INTER1) %>%
+  rename(actors = INTER1, total = n) %>%
+  filter(!is.na(actors)) %>%
+  bind_rows(acled %>%
+              count(INTER2) %>%
+              rename(actors = INTER2, total = n) %>%
+              filter(!is.na(actors))) %>%
+  group_by(actors) %>%
+  summarize(total = sum(total)) %>%
+  arrange(desc(total))
+
+
+create.plactr <- function(df, opt, tit) {
+  p <- df %>% ggplot(aes(x = reorder(actors, total), y = total)) +
+    geom_col(aes(fill = total), width = .6) +
+    geom_text(aes(label = total), vjust = .4, hjust = -.3, size = 2.5) +
+    scale_y_continuous(trans = 'sqrt', expand = expansion(mult = c(.02, .25))) +
+    scale_fill_viridis_c(option = opt, trans = 'log', begin = .05, end = .95) +
+    theme(legend.position = 'none', panel.border = element_blank(),
+          panel.grid.major.x = element_blank(), axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(), axis.title = element_blank()) +
+    labs(title = tit) +
+    coord_flip()
+  return(p)
+}
+
+p_actor <- create.plactr(df_act, 'D', 'Actor Occurance')
+p_actor_fat <- create.plactr(df_cas_act, 'C', 'Actors Contributions to Fatalities')
+
+p_actor <- p_actor + space + p_actor_fat + layw2
+
+
+
+
