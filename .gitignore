@@ -2,3 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
+_out/
+myeda.tex
