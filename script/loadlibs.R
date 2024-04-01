@@ -6,7 +6,6 @@ load_mypkg <- function(pkg) {
     suppressMessages(suppressPackageStartupMessages(library(x, character.only = TRUE)))
   })
 }
-
 packages <- c(
   'dplyr', 'tidyr','forcats', 'ggcorrplot', 'ggforce', 'ggplot2', 'ggridges', 'gratia',
   'grid','lubridate', 'mgcv', 'NLP', 'patchwork', 'purrr', 'RColorBrewer', 'readxl', 
@@ -14,5 +13,5 @@ packages <- c(
   'gt', 'viridis', 'reshape2', 'ape', 'spdep', 'strucchange', 'forecast', 'trend','cowplot',
   'ggfortify', 'magrittr', 'tseries', 'stats', 'caret', 'ggraph', 'ranger', 'xts',
   'tidygraph', 'xgboost', 'pdp', 'fmsb', 'MASS', 'splines', 'ggrepel', 'segmented', 
-  'anomalize', 'stats', 'trend', 'tibbletime', 'Rbeast', 'tsoutliers', 'gt')
+  'anomalize', 'stats', 'trend', 'tibbletime', 'Rbeast', 'tsoutliers', 'gt', 'kableExtra')
 load_mypkg(packages)
