@@ -160,7 +160,7 @@ Dalam konteks analisis menggunakan pemrograman R, menjaga replikabilitas hasil a
 
 1.  Script dan Kode Sumber: Semua langkah analisis, termasuk pemuatan data, pemrosesan, dan visualisasi, akan disusun dalam script R yang terdokumentasi dengan baik. Script ini akan mencakup semua langkah yang diperlukan untuk melakukan EDA secara lengkap.
 2.  Komentar dan Anotasi: Setiap bagian dari script akan diberi komentar dan anotasi yang jelas untuk menjelaskan tujuan, metode, dan interpretasi dari setiap langkah analisis. Hal ini akan memudahkan orang lain untuk memahami dan mereplikasi analisis.
-3.  Manajemen Versi: Script dan kode sumber akan dikelola menggunakan sistem manajemen tertentu yang sesuai. Setiap perubahan yang dilakukan akan dicatat dengan jelas, dan versi yang stabil akan dikelola secara teratur.
+3.  Manajemen Versi: Script dan *source code* akan dikelola menggunakan sistem manajemen Git. Setiap perubahan yang dilakukan akan dicatat dengan jelas, dan versi yang stabil akan dikelola secara teratur.
 4.  Dokumentasi Lengkap: Selain script R, akan disertakan dokumentasi lengkap yang menjelaskan proses EDA secara detail, termasuk konteks penelitian, sumber data, langkah-langkah analisis, dan temuan utama.
 5.  Penyimpanan Data yang Terkelola: Data konflik yang digunakan dalam analisis akan disimpan secara terkelola dan diarsipkan dengan baik. Ini akan memastikan bahwa data dapat diakses dan dianalisis kembali jika diperlukan di masa depan.
 
@@ -179,6 +179,8 @@ p_raw + p_clean & theme(panel.border = element_blank(), axis.ticks = element_bla
 ```
 
 ## **Analisis Time Series**
+
+Analisis time series berkaitan dengan pengamatan dan analisis data yang diambil secara berurutan sepanjang waktu. Tujuan utamanya adalah untuk memodelkan dan menganalisis pola, tren, musiman, dan fluktuasi dalam data seiring waktu. Dalam analisis time series, kita mencoba untuk memahami bagaimana suatu variabel berubah seiring waktu dan bagaimana pola tersebut dapat digunakan untuk membuat prediksi di masa depan.
 
 Sebelum melakukan analisis time series, beberapa langkah pra-pemrosesan dilakukan untuk mempersiapkan data. Pertama, frekuensi data diubah dari harian ke mingguan dan bulanan untuk mengurangi noise dan pengaruh nilai ekstrem, tetapi di satu sisi tidak mengurangi resolusi data secara berlebihan. Kedua, metode agregasi means digunakan untuk menjaga stabilitas data terhadap nilai ekstrem, mean dari setiap minggu dan bulan dihitung untuk menggambarkan nilai tengah dari data dalam rentang waktu tersebut. Terakhir, transformasi log1p atau log(1+x) diterapkan untuk mengurangi pengaruh nilai nol dan kecil, yang akan memperjelas garis tren tanpa menghilangkan informasi penting dan mengurangi ketidakpastian dalam analisis, serta meningkatkan stabilitas analisis. Hasil pra-pemrosesan data dapat dilihat pada Gambar \ref{fig:regd}. Grafik ini memvisualisasikan tren konflik mingguan yang terjadi dalam periode 9 tahun, mulai dari tahun 2015 hingga 2023. Data yang ditampilkan mencerminkan jumlah konflik yang terjadi setiap minggu selama periode waktu tersebut.
 
@@ -447,6 +449,28 @@ space + pnet + space + plot_layout(width = c(1, 4, 1))
 ```
 
 Beberapa aktor memiliki interaksi dengan dirinya sendiri, seperti Rioters dan Political Militias, yang menunjukkan bahwa mereka memiliki subgrup yang beroperasi secara independen dan berinteraksi satu sama lain. Beberapa aktor memiliki interaksi minimal dengan aktor lain, seperti Identity Militias dan State Forces, yang menunjukkan bahwa mereka mungkin memiliki peran yang lebih terbatas dalam konflik. Pola interaksi menunjukkan bahwa beberapa aktor memiliki interaksi yang lebih intensif dengan aktor lain, sementara beberapa aktor memiliki interaksi yang lebih terdistribusi. Fluktuasi interaksi antara aktor-aktor dapat menunjukkan bahwa konflik tidak statis dan dapat berubah seiring waktu atau berdasarkan faktor-faktor lain. Analisis ini dapat membantu dalam memahami dinamika konflik dan identifikasi aktor-aktor kunci serta hubungan yang mungkin mempengaruhi eskalasi atau deeskalasi konflik.
+
+Dari hasil analisis, terlihat bahwa sebagian besar korban jiwa disebabkan oleh tindakan yang dilakukan oleh Civilians dan State Forces, dengan masing-masing mencatat total korban jiwa sebanyak 570 dan 519 (Gambar \ref{fig:actfat}). Hal ini menunjukkan bahwa, dalam konteks konflik yang dipelajari, peran dan tindakan dari kedua kelompok ini memiliki dampak signifikan terhadap angka kematian.
+
+```{r actfat, echo=FALSE, fig.cap='Perbandingan Jumlah Kemunculan Aktor dan Korban Jiwa Akibat Aktor', fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE}
+p_actor
+```
+
+Di sisi lain, Rebel Groups, Rioters, Identity Militias, Political Militias, dan External/Other Forces memiliki kontribusi yang relatif lebih rendah terhadap angka korban jiwa, dengan total korban jiwa yang jauh lebih kecil dibandingkan Civilians dan State Forces. Meskipun demikian, penting untuk diingat bahwa kontribusi dari setiap aktor dalam konflik ini dapat memiliki implikasi yang signifikan terhadap situasi keseluruhan, terutama dalam hal keamanan dan stabilitas.
+
+## Analisis Korelasi
+
+Analisis korelasi berkaitan dengan mengukur tingkat hubungan antara dua variabel. Korelasi statistik mengukur sejauh mana perubahan dalam satu variabel berhubungan dengan perubahan dalam variabel lainnya.
+
+## **Autokorelasi Spasial**
+
+Uji Monte Carlo Moran's I digunakan untuk menguji signifikansi pola spasial dalam data. Dengan kata lain, uji ini digunakan untuk menentukan apakah perubahan data pada wilayah tertentu dapat mempengaruhi perubahan data pada wilayah lain yang berdekatan. Dengan melakukan simulasi Monte Carlo, kita dapat membandingkan distribusi nol dari Moran's I dengan nilai Moran's I asli. Pengujian ini akan diterapkan untuk data Jumlah Konflik (*Events*) dan Jumlah Korban Jiwa (*Fatalities*).
+
+Hasil uji Monte Carlo Moran's I untuk data Events menunjukkan bahwa terdapat efek spasial yang signifikan. Nilai Moran's I positif (0.36989) dan p-value yang rendah (0,008) menunjukkan bahwa daerah yang berdekatan memiliki nilai yang lebih serupa. Sedangkan untuk data Fatalities, hasil uji Monte Carlo Moran's I menunjukkan bahwa tidak ada efek spasial yang signifikan. Nilai Moran's I positif (0.20883) dan p-value yang lebih besar dari 0,05 (0,052) menunjukkan bahwa nilai Moran's I asli didapat secara acak dan tidak signifikan. Hasil ini menunjukkan bahwa pola spasial dapat mempengaruhi data *Events*, sedangkan tidak signifikan pada data *Fatalities*.
+
+```{r moran, echo=FALSE, fig.cap='Perbandingan Signifikansi Indeks Moran antara Data Events dan Fatalities', fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE}
+p_moran
+```
 
 \pagebreak
 
