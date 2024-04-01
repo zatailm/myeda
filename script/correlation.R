@@ -97,9 +97,8 @@ custom_breaks <- seq(-1, 1, by = 0.5)
 
 p_cor_con2 <- ggcorrplot(
   df_cor, hc.order = TRUE, type = 'lower', outline.color = 'white', lab = TRUE, 
-  lab_size = 2.4, method = 'circle') +
+  lab_size = 2, method = 'circle') +
   scale_fill_gradient2(low = clrs[1], mid = clrs[2], high = clrs[3],
                        midpoint = 0, breaks = custom_breaks, limits = c(-1, 1)) +
-  theme_zvis_grid(10) + theme(axis.title = element_blank()) +
+  theme_zvis_grid(9) + theme(axis.title = element_blank()) +
   labs(fill = 'coefficient')
-p_cor_con2
