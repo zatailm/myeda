@@ -464,13 +464,25 @@ Analisis korelasi berkaitan dengan mengukur tingkat hubungan antara dua variabel
 
 ## **Autokorelasi Spasial**
 
-Uji Monte Carlo Moran's I digunakan untuk menguji signifikansi pola spasial dalam data. Dengan kata lain, uji ini digunakan untuk menentukan apakah perubahan data pada wilayah tertentu dapat mempengaruhi perubahan data pada wilayah lain yang berdekatan. Dengan melakukan simulasi Monte Carlo, kita dapat membandingkan distribusi nol dari Moran's I dengan nilai Moran's I asli. Pengujian ini akan diterapkan untuk data Jumlah Konflik (*Events*) dan Jumlah Korban Jiwa (*Fatalities*).
+Uji Monte Carlo Moran's I digunakan untuk menguji signifikansi pola spasial dalam data. Dengan kata lain, uji ini digunakan untuk menentukan apakah perubahan data pada wilayah tertentu dapat mempengaruhi perubahan data pada wilayah lain yang berdekatan. Dengan melakukan simulasi Monte Carlo, kita dapat membandingkan distribusi nol dari Moran's I dengan nilai Moran's I asli. Pengujian ini akan diterapkan pada data Jumlah Konflik (*Events*) dan Jumlah Korban Jiwa (*Fatalities*).
 
-Hasil uji Monte Carlo Moran's I untuk data Events menunjukkan bahwa terdapat efek spasial yang signifikan. Nilai Moran's I positif (0.36989) dan p-value yang rendah (0,008) menunjukkan bahwa daerah yang berdekatan memiliki nilai yang lebih serupa. Sedangkan untuk data Fatalities, hasil uji Monte Carlo Moran's I menunjukkan bahwa tidak ada efek spasial yang signifikan. Nilai Moran's I positif (0.20883) dan p-value yang lebih besar dari 0,05 (0,052) menunjukkan bahwa nilai Moran's I asli didapat secara acak dan tidak signifikan. Hasil ini menunjukkan bahwa pola spasial dapat mempengaruhi data *Events*, sedangkan tidak signifikan pada data *Fatalities*.
+Pada data *Events*, uji Moran's I menunjukkan bahwa terdapat korelasi spasial positif signifikan, dengan nilai p-value yang lebih rendah dari 0,05. Dari hasil uji Monte Carlo Moran's I, didapati bahwa nilai Moran's I statistic yang dihasilkan adalah 0.36989, dengan observed rank 990. P-value yang dihasilkan adalah 0,01. Hal ini menunjukkan bahwa terdapat efek spasial yang signifikan pada variabel *Events*. Sedangkan pada data *Fatalities*, uji Moran's I menunjukkan bahwa terdapat korelasi spasial yang tidak signifikan, dengan nilai p-value yang lebih besar dari 0,05. Dari hasil uji Monte Carlo Moran's I, dapat dilihat bahwa nilai Moran's I statistic yang dihasilkan adalah 0.20883, dengan observed rank 944. P-value yang dihasilkan adalah 0,056. Hal ini menunjukkan bahwa tidak ada efek spasial yang signifikan pada variabel *Fatalities*. Walaupun demikian, nilai p-value pada data *fatalities* yang hampir mendekati batas signifikansi, yang dapat diinterpretasikan bahwa ada kemungkinan efek spasial meskipun sangat kecil atau lemah.
+
+Grafik permutasi Monte Carlo untuk uji Moran's I dapat dilihat dalam Gambar \ref{moran}. Grafik ini digunakan untuk menunjukkan distribusi permutasi dari nilai statistik Moran's I, yang digunakan untuk menguji korelasi spasial. Dalam grafik ini, area kuning menunjukkan nilai Moran's I yang dihasilkan oleh data asli, sedangkan area hijau atau merah menunjukkan distribusi permutasi Moran's I yang dihasilkan dari percobaan-percobaan Monte Carlo. Grafik ini dapat digunakan untuk membandingkan nilai Moran's I dari data asli dengan distribusi permutasi, dan memperkirakan kepercayaan dari nilai Moran's I tersebut. Jika nilai Moran's I dari data asli lebih besar dari nilai Moran's I pada distribusi permutasi, maka terdapat korelasi spasial yang signifikan.
 
 ```{r moran, echo=FALSE, fig.cap='Perbandingan Signifikansi Indeks Moran antara Data Events dan Fatalities', fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE}
 p_moran
 ```
+
+Dari hasil uji tersebut, kita dapat mengatakan bahwa terdapat efek spasial yang signifikan pada variabel *Events*, sedangkan tidak signifikan pada variabel *Fatalities*. Hal ini dapat menjadi dasar untuk melakukan analisis lebih lanjut terhadap pola spasial yang terjadi pada data. Selain itu, hasil dari uji Moran's I dapat digunakan sebagai acuan untuk membuat model spasial yang lebih kompleks, seperti model regresi spasial atau analisis klastering.
+
+Analisis klastering dengan menggunakan Moran's Plot (Gambar \ref{moranplot}) memberikan gambaran yang lebih intuitif terkait dengan autokorelasi spasial dalam data *events* dan *fatalities*. Grafik ini terbagi ke dalam 4 klaster, kluster 1 (kanan atas) adalah kluster di mana terdapat autokorelasi spasial positif, yang berarti peningkatan data konflik atau korban jiwa yang terjadi pada lokasi tersebut cenderung mempengaruhi peningkatan data pada area-area sekitarnya. Sedangkan kluster 3 (kiri bawah) adalah kluster di mana terdapat autokorelasi spasial negatif, yang sederhananya berarti konflik dan korban jiwa pada lokasi-lokasi yang berada pada kluster ini cenderung terjadi secara acak. Semestara itu, kluster 2 (kiri atas) dan kluster 4 (kanan bawah) adalah lokasi-lokasi yang memiliki potensi sebagai outlier.
+
+```{r moranplot, echo=FALSE, fig.cap='Grafik Autokorelasi Spasial', fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE}
+p_moranp
+```
+
+Dengan memahami pola spasial clustering dari konflik ini, pemangku kepentingan dapat lebih efektif dalam merancang intervensi yang bertujuan untuk mencegah dan mengurangi konflik, serta mempromosikan perdamaian dan keamanan. Salah satunya dengan menjaga kodusifitas pada lokasi-lokasi *hospot* berada.
 
 \pagebreak
 

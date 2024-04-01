@@ -1,5 +1,6 @@
 ##----------------------------------------------------------------------------------- MORAN
 
+## Permutasi moran
 spatial.moran.mc <- function(data, variable, data_geo) {
   nb <- poly2nb(data_geo, queen = T)
   lw <- nb2listw(nb, style = "W", zero.policy = T)
@@ -11,7 +12,7 @@ spatial.moran.mc <- function(data, variable, data_geo) {
     moran_test = moran_test,
     mcmoran = mcmoran
   )
-  return(result)
+  return(list(result = result, nb = nb, lw = lw))
 }
 
 result_evt <- spatial.moran.mc(df_geo_adm, "n", df_geo_adm)
@@ -20,9 +21,9 @@ result_fat <- spatial.moran.mc(df_geo_fat, "n", df_geo_fat)
 x_evt <- seq(-.4, .6, by = .2)
 x_fat <- c(-.25, 0, .25, .5, .75)
 
-plot_mcmoran <- function(result, br, col, title = "") {
-  plot_data <- data.frame(Moran_I = c(result$mcmoran$statistic, result$mcmoran$res))
-  moran_statistic <- result$mcmoran$statistic
+plot_mcmoran <- function(res, br, col, title = "") {
+  plot_data <- data.frame(Moran_I = c(res$result$mcmoran$statistic, res$result$mcmoran$res))
+  moran_statistic <- res$result$mcmoran$statistic
   density_data <- density(plot_data$Moran_I)
   shade_start_index <- which(density_data$x >= moran_statistic)[1]
   moran_statistic_2 <- min(plot_data$Moran_I)
@@ -52,5 +53,35 @@ plot_mcmoran <- function(result, br, col, title = "") {
 p_moran_evn <- plot_mcmoran(result_evt, x_evt, "#2c728e", "Events")
 p_moran_fat <- plot_mcmoran(result_fat, x_fat, "#d8576b", "Fatalities")
 p_moran <- p_moran_evn + space + p_moran_fat + layw2
+
+## Plot moran
+
+plot.moran <- function(df_spatial, variable, listw, title) {
+  x <- df_spatial[[variable]]
+  w <- lag.listw(listw, x, zero.policy = T)
+  xwx.lm <- lm(w ~ x)
+  infl.xwx <- influence.measures(xwx.lm)
+  is.inf <- which(apply(infl.xwx$is.inf, 1, any))
+  labels <- as.character(df_spatial$PROVINSI)
+  plot_data <- data.frame(x = x, wx = w, labels = labels)
+  
+  p <- ggplot(plot_data, aes(x = x, y = wx)) +
+    geom_point(shape = 16, size = 2, color = '#FC4E07', alpha = .5) +
+    geom_abline(slope = coef(xwx.lm)[2], intercept = coef(xwx.lm)[1]) +
+    geom_hline(yintercept = mean(w), linetype = "dashed") +
+    geom_vline(xintercept = mean(x), linetype = "dashed") +
+    geom_point(data = plot_data[is.inf, ], aes(x = x, y = wx), shape = 8, size = 2) +
+    geom_text_repel(data = plot_data[is.inf, ], aes(x = x, y = wx, label = labels), 
+                    size = 2.5, box.padding = .8) +
+    scale_y_continuous(expand = expansion(mult = c(.07, .2))) +
+    labs(x = variable, y = 'Spatially lagged', title = title) +
+    theme(axis.title = element_blank())
+  return(p)
+}
+
+# df_geo_adm dan df_geo_fat didefinisikan di distrib.R
+p_mpe <- plot.moran(df_geo_adm, "n", result_evt$lw, "Events")
+p_mpf <- plot.moran(df_geo_fat, "n", result_fat$lw, "Fatalities")
+p_moranp <- p_mpe + space + p_mpf + layw2
 
 ## -------------------------------------------------------------------------------
