@@ -3,6 +3,6 @@
 .RData
 .Ruserdata
 _out/
-myeda.tex
-myeda.Rmd
-myeda.Rproj
+.tex
+.Rmd
+.Rproj
