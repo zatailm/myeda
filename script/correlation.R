@@ -84,4 +84,22 @@ p_mpe <- plot.moran(df_geo_adm, "n", result_evt$lw, "Events")
 p_mpf <- plot.moran(df_geo_fat, "n", result_fat$lw, "Fatalities")
 p_moranp <- p_mpe + space + p_mpf + layw2
 
-## -------------------------------------------------------------------------------
+##----------------------------------------------------------------------------------- JENIS KONFLIK
+
+df_cofa <- data_monthly[, c(4:9)] %>%
+  set_names(c('Battles', 'ERV', 'Protests', 'Riots', 'Str.Dev.', 'VAC'))
+
+df_cor <- round(cor(df_cofa), 1)
+p.mat <- cor_pmat(df_cofa)
+clrs <- c('#0d0887', 'white', '#fb9f3a')
+
+custom_breaks <- seq(-1, 1, by = 0.5)
+
+p_cor_con2 <- ggcorrplot(
+  df_cor, hc.order = TRUE, type = 'lower', outline.color = 'white', lab = TRUE, 
+  lab_size = 2.4, method = 'circle') +
+  scale_fill_gradient2(low = clrs[1], mid = clrs[2], high = clrs[3],
+                       midpoint = 0, breaks = custom_breaks, limits = c(-1, 1)) +
+  theme_zvis_grid(10) + theme(axis.title = element_blank()) +
+  labs(fill = 'coefficient')
+p_cor_con2
