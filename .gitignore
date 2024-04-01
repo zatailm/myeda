@@ -2,9 +2,10 @@
 .Rhistory
 .RData
 .Ruserdata
-_out/
+_out
 .tex
 .Rmd
 .Rproj
 myeda.Rmd
 myeda.Rproj
+archive
