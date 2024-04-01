@@ -309,9 +309,6 @@ Untuk menentukan model mana yang terbaik, kita perlu mempertimbangkan beberapa m
 Hasil perhitungan terhadap beberapa komponen metrik di atas untuk setiap model yang diuji dapat dilihat pada Tabel \ref{tab:evaltbl} di bawah ini:
 
 ```{r evaltbl, echo=FALSE}
-#evtbl
-
-library(kableExtra)
 kbl(ev, caption = "Hasil Evaluasi Model Forecasting", booktabs = T) %>%
 kable_styling(latex_options = c("striped", "hold_position"))
 ```
@@ -443,11 +440,13 @@ pfat_adm
 
 ### Aktor
 
-lorem ipsum
+Analisis interaksi antara aktor-aktor dalam konflik menunjukkan pola yang menarik (Gambar \ref{fig:actnet}). Rioters dan State Forces memiliki interaksi terbanyak, dengan total frekuensi 585 dan 578, menunjukkan intensitas konflik antara kedua entitas tersebut. Selanjutnya, State Forces dan Civilians juga memiliki interaksi yang cukup tinggi, dengan total frekuensi 572, menegaskan peran penting mereka dalam konflik. Rebel Groups memiliki interaksi dengan State Forces dan Civilians, yang menunjukkan partisipasi mereka dalam konflik. Political Militias dan Identity Militias memiliki interaksi dengan Civilians dan State Forces, serta dengan dirinya sendiri, menunjukkan bahwa mereka memiliki peran dalam konflik dan mungkin beroperasi dalam beberapa front. External/Other Forces memiliki interaksi dengan Civilians dan Political Militias, menunjukkan bahwa mereka juga berperan dalam konflik dan mungkin beroperasi dalam beberapa front.
 
 ```{r actnet, echo=FALSE, fig.cap='Intensitas Interaksi antar Aktor Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
 space + pnet + space + plot_layout(width = c(1, 4, 1))
 ```
+
+Beberapa aktor memiliki interaksi dengan dirinya sendiri, seperti Rioters dan Political Militias, yang menunjukkan bahwa mereka memiliki subgrup yang beroperasi secara independen dan berinteraksi satu sama lain. Beberapa aktor memiliki interaksi minimal dengan aktor lain, seperti Identity Militias dan State Forces, yang menunjukkan bahwa mereka mungkin memiliki peran yang lebih terbatas dalam konflik. Pola interaksi menunjukkan bahwa beberapa aktor memiliki interaksi yang lebih intensif dengan aktor lain, sementara beberapa aktor memiliki interaksi yang lebih terdistribusi. Fluktuasi interaksi antara aktor-aktor dapat menunjukkan bahwa konflik tidak statis dan dapat berubah seiring waktu atau berdasarkan faktor-faktor lain. Analisis ini dapat membantu dalam memahami dinamika konflik dan identifikasi aktor-aktor kunci serta hubungan yang mungkin mempengaruhi eskalasi atau deeskalasi konflik.
 
 \pagebreak
 
