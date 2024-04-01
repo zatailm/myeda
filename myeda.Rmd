@@ -443,6 +443,8 @@ pfat_adm
 
 ### Aktor
 
+lorem ipsum
+
 ```{r actnet, echo=FALSE, fig.cap='Intensitas Interaksi antar Aktor Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
 space + pnet + space + plot_layout(width = c(1, 4, 1))
 ```
