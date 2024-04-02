@@ -1,0 +1,6 @@
+**.R linguist-detectable-language=R
+**.r linguist-detectable-language=R
+**.tex linguist-detectable-language=R
+**.Rmd linguist-language=R
+**.bib linguist-language=R
+**.rds linguist-language=R
