@@ -4,3 +4,4 @@
 **.Rmd linguist-language=R
 **.bib linguist-language=R
 **.rds linguist-language=R
+**.xlsx linguist-language=R
