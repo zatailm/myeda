@@ -1,0 +1,514 @@
+---
+output:
+  bookdown::pdf_document2:
+    keep_tex: true
+    fig_caption: true
+    dev: CairoPNG
+    latex_engine: pdflatex
+    template: templates/template.tex
+    toc: no
+header-includes:
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+  - \AtBeginDocument{\def\figurename{Gambar}}
+  - \AtBeginDocument{\renewcommand{\tablename}{Tabel}}
+  - \usepackage{hyperref}
+  - \usepackage{array}
+  - \usepackage{caption}
+  - \usepackage{graphicx}
+  - \usepackage{siunitx}
+  - \usepackage[table]{xcolor}
+  - \usepackage{multirow}
+  - \usepackage{hhline}
+  - \usepackage{calc}
+  - \usepackage{tabularx}
+  - \usepackage{fontawesome}
+  - \usepackage[para,online,flushleft]{threeparttable}
+biblio-style: apa
+title: "Analisis Eksploratif Konflik di Indonesia (2015-2023): Kajian Data ACLED"
+thanks: "Manuskrip ini akan dipublikasikan di jurnal ilmiah. Dokumen ini dibuat menggunakan RMarkdown dalam RStudio; **Corresponding author**: zatailmam@gmail.com."
+author:
+- name: M. Adib Zata Ilmam
+  affiliation: Universitas Nahdlatul Wathan Mataram
+abstract: "Penelitian ini bertujuan untuk menganalisis konflik di Indonesia menggunakan data Armed Conflict Location & Event Data (ACLED). Melalui pendekatan visualisasi dan analisis statistik, penelitian ini mengungkap pola spasial dan temporal konflik di berbagai wilayah Indonesia. Data ACLED digunakan untuk mengidentifikasi distribusi konflik, menganalisis korelasi antar variabel konflik, dan membentuk gambaran holistik tentang jenis konflik yang terjadi. Hasil analisis ini disajikan melalui grafik distribusi, matriks korelasi, wordcloud, grafik garis, dan grafik pie. Penggunaan data ACLED memperkaya pemahaman terkait konflik di Indonesia, sementara integrasi analisis visual dan statistik memberikan wawasan yang komprehensif. Distribusi konflik menyoroti wilayah-wilayah dengan tingkat kejadian tinggi, sementara korelasi antar variabel membuka hubungan penting di antara faktor-faktor konflik. Wordcloud memberikan gambaran naratif, dan grafik garis mengidentifikasi tren waktu. Analisis jenis konflik memberikan pemahaman tentang variasi konflik di Indonesia. Temuan ini diharapkan memberikan kontribusi pada pemahaman mendalam terkait konflik di Indonesia dan menjadi dasar bagi pengembangan kebijakan yang lebih efektif dalam penanganan dan pencegahan konflik di masa depan."
+keywords: "eksplorasi data, konflik, Indonesia, ACLED"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+geometry: margin=1in
+fontfamily: libertine
+fontsize: 10pt
+endnote: no
+bibliography: [bibliography/mylib.bib, bibliography/packages.bib]
+link-citations: yes
+linkcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE, fig.pos='H', echo=FALSE, fig.dpi=300,
+                      message=FALSE, warning=FALSE,
+                      fig.path='_out/figs/',
+                      cache.path = '_out/_cache/',
+                      fig.process = function(x) {
+                        x2 = sub('-\\d+([.][a-z]+)$', '\\1', x)
+                        if (file.rename(x, x2)) x2 else x
+                      })
+```
+
+<!--# MAIN PREPARATION -->
+
+```{r mainprep, message=FALSE, warning=FALSE, include=FALSE, cache=TRUE}
+source("script/libraries.R", local = knitr::knit_global())
+source("script/recode.R", local = knitr::knit_global())
+source("script/theme.R", local = knitr::knit_global())
+source("script/pretsanalysis.R", local = knitr::knit_global())
+source("script/ts.R", local = knitr::knit_global())
+source("script/distrib.R", local = knitr::knit_global())
+source("script/numericdf.R", local = knitr::knit_global())
+source("script/correlation.R", local = knitr::knit_global())
+```
+
+# Pendahuluan
+
+Penelitian ini berawal dari kebutuhan mendalam untuk memahami dinamika konflik yang telah melanda Indonesia. Setelah rezim Presiden Suharto runtuh pada tahun 1998, periode ketegangan sosial dan politik mengancam kesatuan negara [@lee_fragile_1999]. Sebagai respon, reformasi desentralisasi diimplementasikan dengan tujuan mengatasi konflik komunal melalui peningkatan tata kelola lokal dan mendorong demokrasi substansial [@van_klinken_communal_2007]. Langkah ini ternyata memberikan kontribusi signifikan dalam membentuk dinamika konflik di Indonesia. Dalam kondisi seperti ini, perlu memperhatikan penanganan akar penyebab konflik, termasuk karakteristik negara dengan sifat demokrasi illiberal [@wilson_illiberal_2015].
+
+Studi-studi sebelumnya telah menyoroti berbagai bentuk konflik di Indonesia, termasuk kekerasan kolektif berbasis identitas, keagamaan, dan etnis [@muqoyyidin_potret_2013; @panggabean_patterns_2010; @panggabean_conflict_2017; @wilson_illiberal_2015], separatisme [@kadir_revisiting_2015; @panggabean_conflict_2017], sumber daya alam [@panggabean_conflict_2017], antar organisasi masyarakat, dan konflik terkait pemilihan umum [@fauzi_social_2019; @suratman_internal_2017], serta konflik tentang isu migran [@cahyono_state_2018; @pudjiastuti_migration_2002], konflik sengketa laut Cina Selatan [@supriyanto_out_2016], dan konflik akibat penerapan operasi keamanan lainnya [@diprose_past_2019]. Tren konflik selama ini memberikan dampak signifikan di berbagai wilayah, terutama DKI Jakarta dan Papua [@madjid_trend_2017]. Konflik-konflik yang terjadi dipengaruhi oleh faktor-faktor seperti pengangguran, ketidaksetaraan, bencana alam, dan keragaman etnis [@wilson_illiberal_2015]. Konflik-konflik ini menciptakan gambaran kompleksitas konflik di Indonesia.
+
+Namun, penelitian-penelitian yang telah dilakukan selama ini hanya berusaha memahami peristiwa-peristiwa tertentu, dengan keterbatasan data rinci dan komprehensif menjadi kendala untuk pemahaman yang lebih lengkap. Dalam era informasi ini, pemahaman melalui data menjadi semakin esensial. Kebijakan dan penanganan yang efektif memerlukan landasan yang kokoh dalam memahami dinamika konflik. Ketersediaan data akan memberikan kontribusi yang baik bagi pemimpin untuk memahami dan mengatasi sumber-sumber konflik [@harolds_conflict_2006] diiringi oleh kebangkitan minat terhadap data konflik untuk analisis konflik [@bernauer_new_2012]. Data juga memberikan kontribusi dalam analisis konflik, metode penyelesaian konflik yang terintegrasi dalam proses penyusunan kebijakan, sampai pada pengembangan model dan prosedur operasional untuk analisa dan penanganan konflik [@azar_conflict_1980; @bruck_conflict_2017; @chadha_cautionary_2006; @pops_public_1988; @pops_conflict_1989]. Selain itu, data dibutuhkan untuk memahami dampak konflik dan keberlanjutan perdamaian di masyarakat pasca-konflik [@collier_data_2001].
+
+Tantangan utama saat ini adalah minimnya data primer yang terintegrasi, rinci, dan holistik tentang konflik di Indonesia, sehingga menyulitkan kita untuk mendapatkan pemahaman yang menyeluruh. Keterbatasan ini memunculkan kebutuhan untuk memanfaatkan data sekunder. Pilihan jatuh pada data yang disediakan oleh *Armed Conflict Location & Event Data Project* (ACLED) dengan fokus pada rentang waktu tahun 2015 sampai tahun 2023. Dataset ini dianggap lebih unggul dari sumber-sumber lainnya. Dalam konteks ini, penelitian ini muncul sebagai langkah yang diperlukan untuk mengisi celah pengetahuan yang selama ini ada.
+
+Penggunaan data ACLED harus diposisikan dalam kerangka kontemporer penelitian konflik, yang semakin bergantung pada teknologi informasi dan data yang tersedia. Sejumlah penelitian terakhir menyoroti peran signifikan data dalam pemahaman konflik global[@deutschmann_advances_2020; @gleditsch_data_2014], namun belum banyak yang membahas potensi data ACLED dalam konteks Indonesia. Analisis konflik melalui data akan memberikan signifikansi secara praktis dan teoretis konflik dan penyelesaiannya [@pawlak_remarks_2005].
+
+Dengan menggunakan *Exploratory Data Analysis* (EDA), penelitian ini diharapkan dapat memberikan kontribusi signifikan dengan menghasilkan wawasan penting dan pemahaman yang lebih kaya tentang konflik di Indonesia. Hasil ini dapat dimanfaatkan untuk merumuskan kebijakan penanganan konflik dan menjadi dasar bagi penelitian lebih lanjut.
+
+# Tinjauan Pustaka
+
+## **Definisi Konflik**
+
+Konsep konflik bersifat kompleks, dengan berbagai pendekatan dan implikasi. @shakirova_concept_2020, mengidentifikasi konflik sebagai fenomena sosial yang timbul dari adanya perlawanan, kontradiksi, ketidakseimbangan struktural, dan ketegangan sosial. Sementara itu, @smith_conceptions_2003 mendalami konflik dalam konteks psikoanalisis, dengan berbagai teori yang mendasarinya. @pathak_managing_2010 menekankan pentingnya bagi organisasi untuk memahami penyebab, teori, dan strategi manajemen konflik. @cooper_what_2003 menyederhanakan konflik sebagai benturan kepentingan yang saling bertentangan, baik bersifat nyata maupun abstrak.
+
+Studi ini menggunakan dataset dari ACLED, maka penting untnuk mempertimbangkan konsep dan definisi konflik dari perspektif ACLED sendiri. @acled_armed_2021 mengkategorikan pristiwa konflik menjadi tiga tipe, yakni (1) peristiwa kekerasan, (2) peristiwa demonstrasi, dan (3) peristiwa non-kekerasan. Masing-masing tipe memiliki sub kategori, pristiwa kekerasan terdiri dari (1) *battles,* (2) *explosions/remote violence*, dan (3) *violence against civilians*. Peristiwa demonstrasi terdiri dari (1) *protests* dan (2) *riots*. Sementara itu, peristiwa non-kekerasan terdiri atas *strategic developments*.
+
+Menurut definisi @acled_armed_2021, *Battles* merujuk pada peristiwa kekerasan yang terjadi melalui interaksi bersenjata antara dua kelompok yang terorganisir secara politis pada waktu dan lokasi tertentu. Sementara itu, *Explosions/remote violence* adalah peristiwa kekerasan satu sisi di mana alat konflik menciptakan asimetri dengan menghilangkan kemampuan target untuk merespons. *Violence against civilians* merujuk pada kekerasan yang melibatkan kelompok bersenjata yang dengan sengaja menyerang non-kombatan tak bersenjata. *Protests*, di sisi lain, adalah demonstrasi publik tanpa kekerasan yang mengungkapkan ketidaksetujuan terhadap entitas politik. *Riots*, sebagai kejadian kekerasan, melibatkan demonstran atau kerumunan dalam tindakan pengacauan; berbeda dengan kelompok bersenjata, pengacau tidak menggunakan senjata canggih. Selanjutnya, *Strategic developments* merangkum peristiwa yang memberikan informasi kontekstual tentang aktivitas kelompok kekerasan, dengan potensi memicu peristiwa masa depan atau berkontribusi pada dinamika politik.
+
+## **ACLED sebagai Sumber Data**
+
+ACLED adalah dataset komprehensif yang mencatat tindakan pemberontak, pemerintah, dan milisi di negara-negara yang tidak stabil, memberikan informasi rinci tentang peristiwa pertempuran, transfer kendali militer, dan kekerasan terhadap warga sipil, ACLED digunakan secara luas dalam studi konflik untuk memberikan data terperinci, termasuk lokasi, waktu, dan jenis kejadian [@raleigh_introducing_2010]. Dataset ini merupakan sumber daya berharga untuk analisis konflik dan pemetaan krisis [@yun_research_2019]. Dataset ini juga telah dibandingkan dengan dataset dari sumber lainnya, seperti *Sierra Leone Local - Location Event Dataset* (SLL-LED), dan ditemukan tidak tertandingi dalam cakupan, kedalaman, dan ketelitian [@de_bruijne_introducing_2014]. Senada dengan itu, @eck_data_2012 menyimpulkan bahwa dataset ACLED memiliki keunggulan dalam kerincian dibandingkan dengan dataset UCDP GED meskipun tidak sempurna, ACLED dapat menjadi pilihan yang baik untuk mengumpulkan data konflik pada tingkat insiden konflik. @maoz_conflict_1988 menekankan perlunya mempertimbangkan premis teoretis yang mendasari dataset konflik, karena hal tersebut dapat berdampak signifikan pada hasil upaya penghasilan data. ACLED memiliki premis teoretis yang mendasar dalam mengumpulkan data konflik.
+
+ACLED memahami bahwa untuk memahami konflik, penting untuk mengetahui lokasi di mana peristiwa-peristiwa konflik terjadi. Oleh karena itu, dataset ini fokus pada pelacakan lokasi spesifik di mana kejadian-kejadian tersebut terjadi. Dari segi kerincian data, ACLED memberikan data yang rinci dan terperinci tentang setiap peristiwa konflik. Ini mencakup informasi tentang jenis konflik, klasifikasi pihak yang terlibat, korban, dan lokasi spesifik hingga tingkat koordinat geografis. ACLED juga tidak hanya menyediakan data dalam satu dimensi, tetapi memungkinkan analisis multi-dimensi. Peneliti dapat memeriksa tren dan pola konflik dari berbagai sudut pandang, membantu mereka memahami konteks yang lebih luas. Premis teoretis ACLED mencakup prinsip keterbukaan dan aksesibilitas. Data yang dikumpulkan dapat diakses secara luas oleh peneliti, praktisi, dan masyarakat umum, memungkinkan berbagai pihak untuk menggunakan informasi tersebut untuk analisis dan pengambilan keputusan.
+
+Dalam metodologinya [@acled_method_2017], proses perekaman dan analisis data dijalankan dengan ketat, didasarkan pada prinsip-prinsip seperti akurasi, kelengkapan, transparansi, dan pembaruan berkala. Proses dimulai dengan mencatat aspek-aspek kejadian, termasuk bentuk, pelaku, tanggal, dan lokasi. Informasi utama diperoleh dari sumber-sumber sekunder, diikuti dengan pengkodean setiap minggu oleh tim peneliti untuk menjaga keakuratan data. ACLED bekerja sama dengan lembaga seperti *Front Line Defenders*, *ProtectDefenders.eu, ExTrac, Asian Forum for Human Rights and Development*, dan *Omega Research Foundation* untuk pengumpulan data di Indonesia [@acled_research_2023].
+
+Proses tinjauan melibatkan lapisan-lapisan validasi, akurasi, dan relevansi data. Pengulas pertama mengumpulkan dan merevisi data, diikuti oleh pemeriksaan silang oleh pengulas kedua. Pengulas ketiga memastikan catatan dan rincian acara diperiksa secara menyeluruh untuk menjaga kualitas data. Jaminan validitas, akurasi, dan relevansi melibatkan pemeriksaan intra dan antar pengode, dengan koreksi berkala untuk meningkatkan akurasi.
+
+Data ACLED memiliki karakteristik unik, seperti unit 'atomik', di mana setiap peristiwa dicatat secara terpisah meskipun terjadi pada periode atau lokasi yang sama. Ketersediaan data yang cepat dan pembaruan berkala memastikan aksesibilitas informasi untuk publik, dengan pemberitahuan perubahan data disediakan secara transparan. Dengan metodologi yang kokoh, ACLED mengumpulkan, meninjau, dan memastikan kualitas data konflik. Komitmen terhadap transparansi dan peningkatan berkelanjutan membentuk dasar kehandalan data untuk masyarakat umum, peneliti, dan pemangku kepentingan lainnya dengan alur yang runut.
+
+Walaupun demikian, @eck_data_2012 menyarankan agar para peneliti yang tertarik pada analisis sub-nasional harus berhati-hati dalam menggunakan data ACLED karena masalah kontrol kualitas yang tidak merata dapat mengakibatkan temuan yang bias jika tidak diperiksa lebih lanjut oleh para peneliti. Sementara itu, @donnay_integrating_2019 menekankan pentingnya integrasi informasi dari beberapa dataset konflik untuk memberikan pengukuran empiris yang lebih komprehensif tentang konflik.
+
+## **Metode EDA dalam Studi Data Konflik**
+
+Exploratory Data Analysis (EDA) memegang peranan kritis dalam investigasi awal terhadap data konflik dengan tujuan mendeteksi pola, anomali, menguji hipotesis, dan memeriksa asumsi melalui ringkasan statistik dan representasi grafis (visualisasi). EDA secara alamiah menggunakan teknik grafis dan beberapa teknik kuantitatif [@tukey_exploratory_1977]. Visualisasi grafis exploratory dalam EDA tidak hanya bertujuan untuk memahami isi dataset, tetapi juga dapat digunakan untuk menyampaikan temuan penelitian [@pearson_exploratory_2018]. EDA menjadi landasan untuk analisis lanjutan [@chatfield_exploratory_1986].
+
+Visualisasi data adalah representasi grafis dari informasi yang bertujuan memudahkan pemahaman, analisis, dan mengungkap pola serta tren. Hal ini penting dalam mentransformasi data menjadi wawasan yang bermakna, meningkatkan keterbacaan data, dan memperkuat literasi informasi [@islam_overview_2019; @traunmuller_introduction_2021; @zentner_exploring_2019]. Visualisasi data juga berfungsi sebagai alat komunikasi yang kuat, memungkinkan penyajian data secara efektif dan menarik [@archambault_data_2015].
+
+Proses visualisasi data menjadi krusial dalam eksplorasi data, memerlukan suatu model yang dapat menangkap konten informasi dan hubungan dalam keseluruhan proses [@jankun-kelly_model_2002]. @islam_overview_2019 menekankan peran visualisasi data dalam mengungkap pola dan tren serta dalam mentransformasi data menjadi wawasan bermakna. Visualisasi dilihat sebagai proses transformasi dalam kontinum Data-Informasi-Pengetahuan [@masud_data_2010], menyoroti perannya sebagai alat komunikasi. @mahajan_process_2019 menegaskan langkah-langkah kunci dalam proses visualisasi data, mulai dari akuisisi data hingga berinteraksi dengan data untuk penyempurnaan pengetahuan.
+
+Analisis statistik, sebagai proses mengorganisir, menganalisis, dan menginterpretasi data numerik untuk membuat inferensi tentang suatu populasi [@wohlin_analysis_2012], memiliki relevansi yang luas, termasuk peranannya dalam penelitian kuantitatif dan manajemen data [@lopez_relevance_2022].
+
+Integrasi analisis visual dan statistik dalam eksplorasi data sangat penting untuk mengungkap pola dan wawasan. Studi-studi yang menggabungkan keduanya menunjukkan keuntungan dalam manipulasi langsung dan visualisasi yang beragam dan dapat disesuaikan [@derthick_interactive_1997]. Visualisasi data memainkan peran kunci dalam analisis big data, menghasilkan model dan prediksi yang lebih baik [@cook_data_2016]. Bahasa visual IDEA membantu dalam eksplorasi dan analisis dengan memberikan dukungan untuk pelacakan operasi dan penerapan semantik [@selfridge_visual_1996]. Eksplorasi dan analisis interaktif data multi-bidang, dengan teknik brushing dan linking, memfasilitasi penemuan pengetahuan [@hansen_interactive_2014]. Keberhasilan eksplorasi data yang efektif seringkali bergantung pada integrasi harmonis antara analisis visual dan statistik.
+
+## **Kontribusi R dalam Analisis Data**
+
+R, sebagai bahasa pemrograman yang serbaguna dan kuat, menawarkan beragam kemampuan analisis statistik dan visualisasi [@edge_r_2019; @lizana_advantages_2020]. Saat ini, terdapat perkembangan aktif dalam otomatisasi tugas umum dalam analisis data, di mana paket-paket R memainkan peran penting dalam proses ini [@staniak_landscape_2019].
+
+Sebagai bahasa pemrograman open source yang populer dan kuat, R sering digunakan sebagai alat bantu dalam penelitian kuantitatif [@mizumoto_r_2016; @parra_using_2023]. Fungsionalitas R melibatkan komputasi statistik dan grafis [@berry_r_2021-1; @torfs_very_2023; @dubitzky_r_2013], dan telah mendapatkan ketenaran dalam berbagai disiplin ilmiah [@dunn_using_2011; @kelley_using_2008; @dubitzky_r_2013]. Keunggulan R tidak hanya terletak pada ekspresivitas dan kompaknya, tetapi juga pada ramah penggunaannya, menjadikannya cocok untuk keperluan pendidikan [@torfs_very_2023].
+
+R memiliki sejumlah keunggulan yang membuatnya unggul dalam analisis data dan visualisasi. Pertama, R menyediakan beragam alat statistik termasuk modeling, pengujian statistik, analisis seri waktu, klasifikasi, dan machine learning [@parra_using_2023-1]. Kedua, R menawarkan kemampuan grafis yang luar biasa, memudahkan visualisasi data [@chan_data_2023]. Selain itu, keleluasaan dalam perluasan fungsionalitas membuat R sangat fleksibel dan dapat disesuaikan sesuai kebutuhan pengguna [@joshi_data_2023]. R juga banyak digunakan dalam kursus statistik dan dianggap sebagai perangkat lunak utama dalam bidang ini [@gardener_introduction_2023]. Kecenderungan R sebagai bahasa pemrograman umum semakin diperkuat, menjadikannya alat yang kuat dan populer untuk berbagai keperluan.
+
+Penggunaan R untuk eksplorasi data telah terdokumentasi dengan baik dalam literatur. @janssenswillen_enabling_2015 dan @borcard_exploratory_2011 menyoroti peran R dalam mengelola, mendeskripsikan, dan memilah data peristiwa, serta menyediakan alat visualisasi dan statistik sederhana untuk data ekologi multidimensional. @rahmany_comparing_2020 membandingkan alat EDA Python dan R, menekankan praktikabilitas EDA dalam mengungkapkan informasi tersembunyi dan pentingnya memiliki alat yang baik untuk menyederhanakan analisis. @staniak_landscape_2019 menyoroti keunggulan R dalam otomatisasi tugas-tugas umum EDA seperti pembersihan data, validasi, dan rekayasa fitur. Studi-studi ini bersama-sama menunjukkan efektivitas R dalam menjalankan EDA pada berbagai jenis dataset.
+
+Penerapan R dalam analisis data membawa manfaat transparansi dan reproduktibilitas [@dunn_using_2011; @kelley_using_2008]. Kode R yang digunakan dalam penelitian mengikuti praktik terbaik untuk memberikan akses terbuka kepada pembaca dan peneliti lainnya [@peng_reproducible_2011].
+
+# Metode
+
+## Deskripsi Data
+
+Data (dataset) yang digunakan dalam analisis ini adalah data konflik di Indonesia dari 1 Januari 2015 sampai dengan 31 Desember 2023 (9 tahun). Data ini terdiri dari catatan konflik yang mencakup berbagai variabel, termasuk tanggal kejadian (konflik), jenis kejadian, aktor yang terlibat dalam konflik, lokasi kejadian (berbagai tingkat daerah adiministrasi dan koordinat), korban jiwa, sumber informasi, dan catatan. Dataet diperoleh dengan mengunduh dari situs resmi ACLED melalui API yang disediakan.
+
+Data terdiri dari total 14.657 observasi. Setiap observasi mewakili persitiwa konflik yang muncul selama periode waktu yang diamati. Dataset ini berisi data yang dikumpulkan oleh ACLED melalui partner lokal mereka yang ada di Indonesia. Data ini bersifat data sekunder. Dataset yang diperoleh diunduh dalam format berkas XSLX. Dataset kemudian diimpor ke lingkungan pemrograman R untuk dianalisis lebih lanjut menggunakan metode Exploratory Data Analysis (EDA).
+
+Tujuan dari penggunaan data ini adalah untuk menjelajahi pola, distribusi, dan informasi penting lain guna memberikan wawasan yang berguna bagi berbagai pihak, termasuk peneliti dan para pengambil keputusan strategis terkait pengelolaan konflik di Indonesia. Selain dataset ACLED, terdapat juga data penunjang yang membantu dalam analisis, yakni data geospasial wilayah Indonesia dalam bentuk format file SHP yang diperoleh dari @anas_github_2023.
+
+## Penerapan *Exploratory Data Analysis* (EDA)
+
+Proses *Eksploratory Data Analysis* (EDA) melibatkan penemuan karakteristik dan wawasan kunci dari dataset [@cashman_userbased_2019]. Proses ini dapat dipercepat melalui penggunaan sistem seperti READ (*Rapid Data Exploration, Analysis and Discovery*), yang mendekomposisi proses eksplorasi menjadi komponen otomatis [@khurana_read_2014] . EDA biasanya mencakup pembersihan data, pemrosesan, dan visualisasi [@song_brief_2023]. Namun, tujuan dan konteks analisis dapat berdampak signifikan pada proses EDA, dengan analis sering melakukan profiling dan penemuan [@wongsuphasawat_goals_2019]. Untuk mengatasi tantangan EDA, diperlukan alat yang dapat mengotomatisasi dan membimbing proses eksplorasi.
+
+Alat utama yang digunakan adalah bahasa pemrograman R, dengan IDE menggunakan RStudio (Ocean Storm 2023.12.1 build 402). Penggunaan bahasa pemrograman R untuk melakukan analisis data, memvisualisasikan hasil, dan menyajikan temuan secara efektif. Alat lain adalah QGis, digunakan untuk menyesuaikan dan menyiapkan data geospasial sehingga lebih siap dimanfaatkan dalam analisis.
+
+## Keterbatasan Metode
+
+Meskipun *Eksploratory Data Analysis* (EDA) merupakan alat yang kuat untuk memahami pola dan tren dalam data konflik di Indonesia, ada beberapa keterbatasan yang perlu diperhatikan:
+
+1.  Keterbatasan Data: Keterbatasan dalam sumber data konflik dapat mempengaruhi validitas analisis. Data konflik mungkin tidak lengkap atau memiliki celah informasi, terutama jika data dikumpulkan dari berbagai sumber yang tidak terkoordinasi.
+2.  Keterbatasan Representasi: Data konflik mungkin tidak mewakili seluruh gambaran konflik yang terjadi di Indonesia. Ada kemungkinan bahwa beberapa konflik tidak tercatat atau dilaporkan dengan benar, sehingga analisis hanya mencakup sebagian dari konflik yang sesungguhnya terjadi.
+3.  Keterbatasan Variabel: Variabel yang tersedia dalam data konflik mungkin terbatas, sehingga analisis tidak dapat menyelidiki semua aspek konflik dengan detail yang diinginkan. Misalnya, data mungkin tidak mencakup faktor-faktor penyebab konflik yang lebih kompleks.
+4.  Keterbatasan Analisis Korelasi: Analisis korelasi dalam EDA hanya dapat mengidentifikasi hubungan statistik antara variabel yang ada dalam data. Ini tidak menjamin adanya hubungan sebab-akibat antara variabel-variabel tersebut.
+5.  Keterbatasan Interpretasi: Meskipun EDA dapat memberikan wawasan yang berharga, interpretasi hasil analisis mungkin bersifat subjektif dan tergantung pada pemahaman peneliti. Selain itu, temuan dari EDA perlu dikonfirmasi melalui analisis lebih lanjut untuk memastikan keandalannya.
+
+Pemahaman terhadap keterbatasan-keterbatasan ini penting agar interpretasi hasil EDA dapat dilakukan dengan hati-hati dan kesimpulan yang diambil dapat dikonfirmasi secara lebih kuat melalui pendekatan analisis tambahan yang lebih mendalam.
+
+## Replikabilitas
+
+Dalam konteks analisis menggunakan pemrograman R, menjaga replikabilitas hasil analisis merupakan hal yang sangat penting. Berikut adalah beberapa langkah yang akan diambil untuk memastikan replikabilitas hasil EDA pada data konflik di Indonesia:
+
+1.  Script dan Kode Sumber: Semua langkah analisis, termasuk pemuatan data, pemrosesan, dan visualisasi, akan disusun dalam script R yang terdokumentasi dengan baik. Script ini akan mencakup semua langkah yang diperlukan untuk melakukan EDA secara lengkap.
+2.  Komentar dan Anotasi: Setiap bagian dari script akan diberi komentar dan anotasi yang jelas untuk menjelaskan tujuan, metode, dan interpretasi dari setiap langkah analisis. Hal ini akan memudahkan orang lain untuk memahami dan mereplikasi analisis.
+3.  Manajemen Versi: Script dan *source code* akan dikelola menggunakan sistem manajemen Git. Setiap perubahan yang dilakukan akan dicatat dengan jelas, dan versi yang stabil akan dikelola secara teratur.
+4.  Dokumentasi Lengkap: Selain script R, akan disertakan dokumentasi lengkap yang menjelaskan proses EDA secara detail, termasuk konteks penelitian, sumber data, langkah-langkah analisis, dan temuan utama.
+5.  Penyimpanan Data yang Terkelola: Data konflik yang digunakan dalam analisis akan disimpan secara terkelola dan diarsipkan dengan baik. Ini akan memastikan bahwa data dapat diakses dan dianalisis kembali jika diperlukan di masa depan.
+
+Dengan langkah-langkah ini, replikabilitas hasil EDA pada data konflik di Indonesia dapat dijaga dengan baik, sehingga analisis dapat direproduksi oleh orang lain untuk memverifikasi hasil dan mendukung kemajuan penelitian yang lebih lanjut.
+
+# Hasil dan Pembahasan
+
+## **Ringkasan Dataset**
+
+Analisis awal terhadap dataset mengungkapkan keragaman jenis data di setiap kolom, termasuk data kategorikal, numerik, dan teks. Dataset awal terdiri dari 13 kolom dan 14.657 (hanya 56 baris yang lengkap berisi data) baris data. Untuk menyelaraskan dataset dengan kebutuhan analisis, beberapa kolom yang dianggap tidak relevan dihapus, meninggalkan fokus pada kolom-kolom utama yang akan menjadi perhatian dalam analisis berikutnya. Pada tahap ini, pembuatan kolom bantuan juga dilakukan untuk memberikan dukungan tambahan dalam analisis data, meningkatkan interpretabilitas, dan memfasilitasi visualisasi data.
+
+Langkah-langkah selanjutnya, termasuk rekoding sesuai dengan panduan ACLED dan transformasi data, diimplementasikan untuk mengoptimalkan dataset agar sesuai dengan kebutuhan analisis. Tindakan pembersihan data difokuskan pada kolom-kolom yang memiliki nilai yang hilang. *Recoding* dan transformasi data dirancang untuk meningkatkan interpretasi dan konsistensi variabel, memastikan keakuratan data, dan menyajikan informasi dalam format yang lebih mudah dimengerti dan dianalisis. Seluruh proses ini, termasuk pembuatan kolom bantuan, memiliki tujuan akhir membentuk dataset yang bersih dan siap digunakan dalam eksplorasi data mendalam. Perbandingan karakteristik dataset sebelum dan setelah pemrosesan data (data bersih) dapat dilihat pada Gambar \ref{fig:rawclean} di bawah.
+
+```{r rawclean, echo=FALSE, fig.cap='Rangkuman Karakteristik Dataset', fig.dpi=300, fig.height=1.7, fig.width=7.48, message=FALSE, warning=FALSE, out.extra=''}
+p_raw + p_clean & theme(panel.border = element_blank(), axis.ticks = element_blank())
+```
+
+## **Analisis Time Series**
+
+Analisis time series berkaitan dengan pengamatan dan analisis data yang diambil secara berurutan sepanjang waktu. Tujuan utamanya adalah untuk memodelkan dan menganalisis pola, tren, musiman, dan fluktuasi dalam data seiring waktu. Dalam analisis time series, kita mencoba untuk memahami bagaimana suatu variabel berubah seiring waktu dan bagaimana pola tersebut dapat digunakan untuk membuat prediksi di masa depan.
+
+Sebelum melakukan analisis time series, beberapa langkah pra-pemrosesan dilakukan untuk mempersiapkan data. Pertama, frekuensi data diubah dari harian ke mingguan dan bulanan untuk mengurangi noise dan pengaruh nilai ekstrem, tetapi di satu sisi tidak mengurangi resolusi data secara berlebihan. Kedua, metode agregasi means digunakan untuk menjaga stabilitas data terhadap nilai ekstrem, mean dari setiap minggu dan bulan dihitung untuk menggambarkan nilai tengah dari data dalam rentang waktu tersebut. Terakhir, transformasi log1p atau log(1+x) diterapkan untuk mengurangi pengaruh nilai nol dan kecil, yang akan memperjelas garis tren tanpa menghilangkan informasi penting dan mengurangi ketidakpastian dalam analisis, serta meningkatkan stabilitas analisis. Hasil pra-pemrosesan data dapat dilihat pada Gambar \ref{fig:regd}. Grafik ini memvisualisasikan tren konflik mingguan yang terjadi dalam periode 9 tahun, mulai dari tahun 2015 hingga 2023. Data yang ditampilkan mencerminkan jumlah konflik yang terjadi setiap minggu selama periode waktu tersebut.
+
+```{r regd, echo=FALSE, fig.align='center', fig.cap='Grafik Time Series', fig.height=1.833, message=FALSE, warning=FALSE, fig.width=7.48}
+ptdisp
+```
+
+Terlihat bahwa ada fluktuasi yang signifikan dalam jumlah konflik sepanjang periode. Namun, untuk memahami pola yang lebih mendalam tentang data, diperlukan analisis dekomposisi. Melalui dekomposisi, kita dapat mengidentifikasi apakah ada tren jangka panjang yang berkembang seiring waktu, pola musiman yang konsisten setiap tahun, serta fluktuasi acak atau noise yang mungkin terjadi. Analisis ini dapat memberikan wawasan yang lebih mendalam tentang apakah ada tren pertumbuhan yang stabil atau perubahan musiman yang dapat dimanfaatkan oleh berbagai pihak. Oleh karena itu, dekomposisi menjadi langkah yang penting dalam menganalisis data time series ini, dan dapat memberikan pemahaman yang lebih komprehensif tentang dinamika konflik.
+
+```{r tsdis, echo=FALSE, fig.cap='Distribusi Data Time Series', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+pbhd
+```
+
+Informasi dasar tentang distribusi data seperti yang terlihat dalam Gambar \ref{fig:tsdis} di atas. Dalam grafik boxplot tahunan dapat diamati bagaimana konsentrasi distibusi data dan terlihat juga bahwa data memiliki outliers. Selain itu, pola distribusi data dapat diamati melalui grafik historgam, grafik ini juga menunjukkan seberapa sering nilai-nilai dalam data timeseries muncul dalam periode waktu pengamatan. Pola distribusi dan karakteristik data yang lebih diperhalus dapat dilihat melalui grafik density, grafik ini membantu dalam memahami bentuk distribusi data beserta nilai modus atau nilai puncak dalam data yang ditandai dengan garis vertikal merah.
+
+### Dekomposisi
+
+Dekomposisi secara umum merujuk pada proses memecah masalah menjadi submasalah yang lebih kecil dan dapat dikelola, yang dapat diselesaikan baik secara paralel maupun secara berurutan [@boyd_notes_2008]. Setelah melakukan dekomposisi data mingguan konflik dari tahun 2015 hingga 2023, kita dapat mengidentifikasi tiga komponen utama: tren, musiman, dan noise (fluktuasi acak). Komponen tren akan membantu kita memahami pola jangka panjang dari konflik selama periode 9 tahun tersebut. Temuan dalam komponen tren dapat mengungkapkan apakah terdapat kecenderungan peningkatan, penurunan, atau stagnasi dalam jumlah konflik dari tahun ke tahun. Analisis tren ini dapat membantu kita memahami apakah ada perubahan signifikan dalam tingkat konflik selama periode tersebut. Analisis dekomposisi menggunakan fungsi STL [@R-stats], yang dipadukan dengan fungsi decompose [@R-stats].
+
+Komponen tren menunjukkan pola jangka panjang dari data deret waktu setelah efek musiman dihapus, seperti yang terlihat pada grafik dalam Gambar \ref{fig:trendline} di bawah. Grafik menggambarkan arah umum atau pergerakan jangka panjang dari data, yang sering kali merupakan indikator dari tren atau pola yang signifikan dari waktu ke waktu. Meskipun data menunjukkan fluktuasi, namun secara umum dapat diamati bahwa jumlah kasus konflik dari awal tahun 2015 sempat menunjukkan tren menurun dan kemudian meningkat secara signifikan dimulai pada sekitar tahun 2017 sampai dengan tahun 2023. Hasil analisis pergerakan tren utama ini memberikan pemahaman umum tentang bagaimana jumlah konflik telah berkembang sepanjang waktu. Pendalaman melalui penelitian terhadap faktor-faktor penyebab peningkatan ini menjadi salah satu hal yang perlu dilakukan, untuk membantu dalam perencanaan dan pengambilan keputusan dalam mitigasi konflik.
+
+```{r trendline, echo=FALSE, fig.cap='Tren Konflik Sepanjang Periode', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+pmtren
+```
+
+Garis tren diestimasi dengan beberapa pendekatan, yakni dengan *Moving Average* (MA) degan memanfaatkan fungsi decompose [@R-stats], *Locally Estimated Scatterplot Smoothing* (LOESS) dengan nilai *span* yang ditentukan secara otomatis oleh fungsi STL [@R-stats] dan dilakukan secara manual dengan menetapkan *span* sebesar 0.75, serta dengan pendekatan *Piecewise Linear* [@segmented2008]. Secara keseluruhan, garis tren yang dihasilkan oleh masing-masing model memperlihatkan pola yang serupa. Model LOESS dengan *span* 0.75 dan *Piecewise Linear* memberikan estimasi yang relatif lebih mudah diinterpretasi dibandingkan dengan model-model lainnya. Sementara itu, grafik tren tiap jenis konflik dapat dilihat pada Gambar \ref{fig:trendtype}, metode pemodelan menggunakan LOESS dengan *span* 0.75. Temuan yang menarik adalah tren *Protest* dan *Riots* identik dengan tren umum pada Gambar \ref{fig:trendline}, yang mengindikasikan bahwa tern umum banyak dipengaruhi dan didominasi oleh data dari kedua jenis konflik ini.
+
+```{r trendtype, echo=FALSE, fig.cap='Grafik Tren Tiap Jenis Konflik Sepanjang Periode', fig.dpi=300, fig.height=2.667, fig.width=7.48}
+ptrent
+```
+
+Selanjutnya beralih ke komponen musiman. Komponen musiman akan membantu kita mengidentifikasi pola yang berulang dalam konflik setiap periode musiman,. Secara umum, grafik musiman kita dapat membantu kita dalam menemukan fluktuasi data selama musim atau periode tertentu dalam setahun yang berkaitan dengan peristiwa-peristiwa khusus. Analisis komponen musiman akan memberikan wawasan tentang pola konflik yang konsisten dari tahun ke tahun, yang dapat membantu dalam perencanaan atau pencegahan konflik di masa depan.
+
+Grafik musiman (Gambar \ref{fig:trenseas}) menunjukkan pola fluktuasi yang berulang-ulang, hal ini menjadi indikasi kuat bahwa terdapat tren musiman dalam data. Perlu menjadi catatan bahwa penentuan nilai lag atau satuan periode musiman untuk analisis ini tidak ditentukan secara spesifik karena didasarkan kepada asumsi bahwa kita tidak memiliki pengetahuan khusus tentang periode musiman yang mungkin ada dalam dataset. Namun demikian, apabila melihat grafik, satuan periode musiman yang dipilih secara otomatis oleh fungsi stl() dalam R adalah periode tahunan.
+
+```{r trenseas, echo=FALSE, fig.cap='Grafik Musiman Konflik', fig.dpi=300, fig.height=1.29, fig.width=7.48, message=FALSE, warning=FALSE}
+pseasn
+```
+
+Untuk menyederhanakan interpretasi, analisis pola musiman menggunakan data bulanan. Grafik dalam Gambar \ref{fig:season} dapat membantu kita dalam menemunkan pola musiman per bulan dalam satu tahun. Di bulan Januari dan Februari, data seringkali lebih rendah dibandingkan dengan bulan lainnya. Di bulan Juli, data seringkali lebih rendah atau sama dengan data di bulan sebelumnya. Di bulan Oktober dan November, data seringkali lebih tinggi dibandingkan dengan bulan lainnya.
+
+```{r season, echo=FALSE, fig.cap='Grafik Musiman per Bulan', fig.dpi=300, fig.height=2.3, fig.width=7.48, message=FALSE, warning=FALSE}
+pseason
+```
+
+Melalui sudut pandang yang berbeda, pada tahun 2015, 2017, 2018, dan 2023, terdapat penurunan yang signifikan dalam nilai-nilai sekitar bulan Juni dan Juli, yang bisa menjadi indikasi dari pola musiman. Namun, pola ini tidak hadir di tahun-tahun lain, dan bahkan dalam beberapa tahun, terjadi kenaikan nilai selama bulan-bulan tersebut. Selain itu, ada pola musiman lain yang muncul di beberapa tahun namun tidak di tahun lain, seperti penurunan nilai pada bulan Desember di tahun 2015, 2017, 2019, dan 2022.. Secara keseluruhan, meskipun ada beberapa petunjuk pola musiman dalam data, mereka tidak konsisten di semua tahun, yang membuat sulit untuk secara definitif mengatakan apakah ada pola musiman yang jelas hadir. Oleh karena itu, pendalaman menganai hal ini akan dilakukan pada analisis khusus.
+
+Analisis terakhir dari dekomposisi adalah analisis *noise* (fluktuasi acak) atau *remainder* (sisa). Komponen ini mencerminkan fluktuasi acak atau variabilitas yang tidak dapat dijelaskan oleh komponen tren dan musiman. Ini merupakan sisa atau kesalahan prediksi dari model, yang dapat memberikan informasi tentang seberapa baik model mampu menangkap pola tren dan musiman yang ada dalam data. Grafik (Gambar \ref{fig:remain}) menunjukkan bahwa tidak terdapat pola yang jelas dan cenderung acak, mengindikasikan bahwa tidak ada pola yang tersisa, dengan kata lain semua pola (tren utama dan musiman) telah teridientifikasi dengan baik.
+
+```{r remain, echo=FALSE, fig.cap='Grafik Remainder', fig.dpi=300, fig.height=1.29, fig.width=7.48, message=FALSE, warning=FALSE}
+prmain
+```
+
+Temuan-temuan melalui dekomposisi ini dapat menjadi informasi atau dasar bagi analisis-analisis selanjutnya, terutama dalam *forecasting* yang akan dideskripsikan pada bagian khusus.
+
+### Autokorelasi dan Spektum
+
+*Autocorrelation Function* (ACF) dan *Partial Autocorrelation Function* (PACF) adalah alat fundamental dalam analisis deret waktu linier [@durre_robust_2015] ACF mengukur korelasi antara serangkaian waktu dan versi tertinggal dari dirinya sendiri, sedangkan PACF mengukur korelasi antara serangkaian waktu dan versi tertinggal dari dirinya sendiri, mengontrol untuk nilai-nilai serangkaian waktu pada semua tertinggal lebih pendek [@etchison_partial_1994]. Sementara itu, analisis spektum atau periodegram dalam konteks analisis time series adalah alat yang digunakan untuk mengidentifikasi periode dominan (atau frekuensi) dari suatu deret waktu. Analisis ini dapat menjadi alat yang membantu untuk mengidentifikasi perilaku siklus dominan dalam suatu seri, terutama ketika siklus tersebut tidak terkait dengan musiman bulanan atau triwulanan yang umum ditemui.
+
+Bedasarkan grafik periodegram (Gambar \ref{fig:specapacf}), terlihat bahwa puncak frekuensi sekitar 0.15 (dalam data mingguan setara dengan periode 6.67 minggu / 7 minggu). Sementara itu, frekuensi periode musiman dalam data adalah 1/7 (atau 0.143). Data dapat dikatakan memiliki pola musiman apabila frekuensi tertinggi berada pada frekuensi periode musiman (diwakili oleh garis putus vertikal merah), sehingga dapat ditarik kesimpulan bahwa kemungkinan besar data mingguan memiliki pola musiman atau memiliki komponen musiman yang berulang setiap 7 minggu.
+
+```{r specapacf, echo=FALSE, fig.cap='Grafik Spektrum, ACF dan PACF', fig.dpi=300, fig.height=2.3, fig.width=7.48}
+psap
+```
+
+Beralih ke analisis autokorelasi. Grafik ACF menunjukkan signifikansi lag yang bersifat *geometric decay*, lag-lag tidak drastis terpotong, namun secara perlahan menuju nilai 0. Temuan ini menunjukkan bahwa observasi pada waktu t memiliki korelasi dengan waktu sebelumnya atau t-1, serta mengindikasikan bahwa dalam data terdapat komponen *Moving Average* (MA). Secara umum dapat disimpulkan bahwa terdapat informasi deret waktu dalam data, bukan sekedar data acak. Temuan ini diperkuat dengan hasil *Root Moving Average* (Q test). Nilai Q statistic adalah sekitar 5027.1, sedangkan batasan signifikansi yang ditentukan adalah sekitar 38.88514. Dengan nilai Q statistic yang jauh lebih besar dari batasan signifikansi, ini menunjukkan bahwa terdapat bukti yang signifikan untuk adanya autokorelasi dalam data pada lag-lag yang diuji. Hasil ini mengindikasikan bahwa data tidak mungkin acak, dan ada pola yang berulang dalam data pada jarak waktu tertentu. Oleh karena itu, dapat disumpulkan bahwa terdapat autokorelasi yang signifikan dalam data pada lag yang telah diuji.
+
+Sementara itu, Grafik PACF menunjukkan adanya signifikansi pada lag 4. Hal ini menunjukkan bahwa observasi pada waktu t berkorelasi dengan observasi pada lag-lag tersebut, serta mengindikasikan bahwa data memiliki komponen *AutoRegressive* (AR). Analisis autokorelasi ini menunjukkan bahwa nilai dalam deret waktu pada suatu waktu dapat diprediksi dengan nilai pada waktu sebelumnya, yang merupakan informasi penting untuk memilih model yang tepat untuk analisis. Temuan yang menunjukkan bahwa data memiliki komponen MA dan AR akan menjadi dasar dalam membangun dan menentukan model prediksi yang sesuai. Temuan ini akan ditindak lanjut dalam bagian *forecasting*.
+
+### Structual Breaks/Structural Changes/Breakpoints
+
+Structural breaks atau perubahan strukrual dalam data time series mengacu pada terjadinya pergeseran atau perubahan tiba-tiba yang signifikan dalam sifat, perilaku, dan struktur data pada suatu titik waktu tertentu [@fischer2015; @dette_detect_2021; @hinich_struc_2006]. Secara lebih khusus, structural breaks menunjukkan titik-titik di mana ada perubahan mendadak dalam proses generasi data time series. Pentingnya mendeteksi structural breaks dalam analisis time series adalah untuk memahami bagaimana pola atau perilaku data telah berubah sepanjang waktu.
+
+Beragam metode dan algoritma dapat digunakan untuk mendeteksi perubahan struktural ini, termasuk metode parametrik dan non parametrik. Dalam analisis dataset, metode non parametrik BEAST (*Breaks for Additive Season and Trend*) menjadi pilihan. Alasan pemilihan metode ini adalah diantaranya adalah metode ini tidak bergantung pada asumsi tertentu tentang model distribusi data atau bentuk model serta sifatnya yang robust yang membuatnya lebih fleksibel dan dapat menangkap perubahan yang lebih kompleks dan tidak terduga. Dalam pelaksanaannya, metode BEAST dijalankan dengan menggunakan paket Rbeast [@R-Rbeast] dalam R.
+
+Metode BEAST memulai dengan memperkirakan jumlah breakpoints yang potensial dalam tren data, diikuti dengan pembuatan distribusi probabilitas untuk kemungkinan kemunculan breakpoints di setiap titik waktu. Dengan menggunakan informasi ini, BEAST mengidentifikasi lokasi-lokasi potensial dari breakpoints dalam tren data. Setelah lokasi-lokasi tersebut diidentifikasi, BEAST memberikan probabilitas dan interval kredibel untuk setiap lokasi breakpoints yang telah ditemukan. Pendekatan Bayesian ini memungkinkan BEAST untuk memberikan estimasi yang komprehensif tentang lokasi dan jumlah breakpoints dalam data time series.
+
+Analisis ini telah menemukan dan menentukan jumlah titik perubahan struktur signifikan dalam data akumulasi konflik dan data tiap jenis konflik sepanjang periode waktu pengamatan. Untuk data akumulasi konflik, titik-titik perubahan tersebut yakni pada tahun 2017 bulan 11 minggu ke-4, tahun 2019 bulan 7 minggu ke-4, dan tahun 2021 bulan 10 minggu ke-3 (lihat Gambar \ref{fig:mainbreak}). Dalam konteks data konflik, titik-titik perubahan ini dapat menjadi indikasi yang menunjukkan perubahan dalam pola konflik, yang mungkin disebabkan oleh peristiwa-peristiwa atau tren tertentu.
+
+```{r mainbreak, echo=FALSE, fig.cap='Breakpoints dalam Tren Data Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+pmainstrbrk & xlab('Year')
+```
+
+Sementara itu, titik-titik perubahan strukrural juga ditemukan dalam setiap data jenis konflik (Gambar \ref{fig:typebreak}. Jumlah dan titik perubahan yang ditemukan beragam. Pola perubahan struktural pada tren *Protests* terlihat didentik dengan pola pada data akumulasi konflik, hal ini mengindikasikan bahwa perubahan atau pergeseran tren konflik yang terjadi kemungkinan disebabkan oleh dinamika jenis konflik ini. Pada umumnya, persitiwa *Protests* disebabkan oleh berbagai faktor yang berkaitan dengan ketidakpuasan, ketidaksetujuan, atau kebutuhan untuk mengekspresikan pendapat atau kepentingan tertentu.
+
+```{r typebreak, echo=FALSE, fig.cap='Breakpoints Tren Tiap Jenis Konflik', fig.dpi=300, fig.height=2.67, fig.width=7.48, message=FALSE, warning=FALSE}
+ptbhere
+```
+
+Peristiwa *Protests* memang tidak selalu identik dengan kemunculan *Riots*, namun dalam banyak kasus dapat saling berdampingan. Perubahan-perubahan struktural pada tren biasanya dipengaruhi oleh suatu peristiwa atau serangkaian pristiwa dari hasil dinamika sosial, politik dan kebijakan.
+
+### Anomali dan Outliers
+
+Anomali dan outlier sering digunakan secara bergantian dalam analisis data, meskipun keduanya memiliki makna yang sedikit berbeda. Anomali merujuk pada fenomena yang tidak sesuai dengan pola atau kondisi normal yang diharapkan dalam data. Dalam konteks analisis data, anomali bisa berupa nilai yang jauh berbeda dari nilai rata-rata atau median, atau nilai yang tidak sesuai dengan pola yang diharapkan berdasarkan data historis atau model. Di sisi lain, outlier adalah nilai yang jauh berbeda dari nilai rata-rata atau median dalam kumpulan data. Mereka sering diidentifikasi berdasarkan standar deviasi atau metode lain yang mengukur ketidakseimbangan dalam distribusi data. Anomali bisa mencakup outlier, tetapi juga bisa mencakup kasus di mana nilai tidak normal karena alasan yang dapat dijelaskan, seperti kesalahan pengukuran atau kesalahan dalam data.
+
+Dalam analisis ini, anomali diterapkan pada data akumulasi konflik dan setiap jenis konflik, sedangkan analisis outliers hanya untuk data akumulasi konflik. Perlakuan untuk analisis outlier didasarkan atas pertimbangan bagi keperluan forecasting pada bagian selanjutnya. Grafik anomali dan outlier dapat dilihat pada Gambar \ref{fig:anout}.
+
+Analisis anomali mengidentifikasi titik-titik yang tidak mengikuti tren atau pola umum, yang mungkin menunjukkan kondisi atau peristiwa yang mungkin tidak biasa. Titik anomali diidentifikasi menggunakan metode IQR (*Interquartile Range*) dalam paket anomalize dalam R, yang membandingkan nilai titik dengan rata-rata dan varians data atau dengan nilai kuartil. Sedangkan analisis outlier menggunakan berbagai macam metode yang dioperasikan dan dipilih secara otomatis oleh fungsi dalam paket TSO dalam R berdasarkan karakteristik data.
+
+Estimasinya, titik anomali pertama berada pada tahun 2016 bulan ke-12 minggu ke-2, anomali ke-2 berada pada tahun 2020 bulan ke-10 minggu ke-2, anomali ke-4 berada pada tahun 2022 bulan ke-5 minggu ke-2, dan terakhir berada pada tahun 2022 bulan ke-9 minggu ke-3. Sedangkan outlier yang terseteksi berjumlah 6 titik dengan 2 tipe outlier yakni AO (*Additive Outliers*) dan TC (*Temporary Changes*). AO merujuk pada outlier yang memiliki efek tambahan pada data time series, menyebabkan perubahan tambahan pada nilai-nilai dalam seri waktu di sekitarnya. Sementara TC merujuk pada outlier yang menyebabkan perubahan sementara dalam tren atau pola data time series, menghasilkan perubahan yang bersifat sementara dalam perilaku data, tetapi kemudian kembali ke pola sebelumnya.
+
+```{r anout, echo=FALSE, fig.cap='Anomali dan Outlier', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+panout
+```
+
+Sementara itu, dalam data jenis konflik juga telah teridentifikasi titik-titik anomali (Gambar \ref{fig:outtype}). Anomali yang terdapat pada data konflik *Explosions/Remote violence* cukup mencolok dibandingkan jenis peristiwa lainnya, yakni anomali pada data jenis di mana setiap peristiwa yang muncul diindetifikasi sebagai anomali. Hal ini disebabkan karena tren umum sepanjang waktu untuk jenis konflik ini adalah tren yang mendatar atau keumumannya adalah peristiwa ini tidak terjadi pada mayoritas waktu sehingga hasil analisisnya berasumsi bahwa setiap peristiwa yang terjadi adalah anomali.
+
+```{r outtype, echo=FALSE, fig.cap='Titik Anomali pada Tiap Data Jenis Konflik', fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+panot
+```
+
+Analisis anomali dalam data konflik memainkan peran yang krusial dalam membantu pemantauan, pengelolaan, dan penyelesaian konflik dengan memperoleh wawasan yang lebih dalam tentang dinamika dan pola dalam konflik.
+
+### Forecasting
+
+Berdasarkanhasil analisis ACF dan PACF sebelumnya, data berpotensi memiliki pola musiman kompleks, atau lemah, atau bahkan tidak ada pola musiman, data sepertinya memiliki pola cyclical, dan tentunya memiliki tren. Oleh karena itu, model yang sepertinya tepat untuk membuat forecasting adalah model-model sederhana seperti model Autoregression (AR) atau Moving Average (MA), atau gabungan keduanya yakni Autoregression Moving Average (ARMA), dan model Autoregressive Integrated Moving Average (ARIMA). Model ARIMA dapat dijalankan dengan mengatur parameter AR , Integrated (I) dan MA secara manual atau dengan otomatis melalui pendekatan Automatic Autoagression Moving Average (Auto ARIMA). Pengaturan parameter secara manual membutuhkan serangkaian pengujian yang banyak sampai mendapatkan hasil terbaik dengan nilai-nilai parameter yang tepat dan seimbang. Parameter-parameter ini diwakili oleh simbol p (orde AR), d (orde diferensiasi/I), dan q (orde MA). Untuk mendapatkan model terbaik, model AR, MA, ARIMA dan Auto ARIMA akan diuji kemudian akan dipilih model yang memiliki tingkat akurasi terbaik.
+
+Sebelum pemodelan dilakukan, terlebih dahulu efek-efek outlier perlu diminimalisir atau bahkan dihilangkan agar prediksi yang dihasilkan lebih akurat. Dalam kasus ini, outlier tidak dihapus dari data, melainkan nilai-nilai pada outlier tersebut diinterpolasi agar tidak menghilangkan informasi yang mungkin dapat mempengaruhi pemodelan.
+
+Untuk menentukan model mana yang terbaik, kita perlu mempertimbangkan beberapa metrik evaluasi yang relevan dengan jenis masalah yang sedang kita hadapi. Dalam kasus ini, kita memiliki beberapa metrik seperti Mean Squared Error (MSE), Root Mean Squared Error (RMSE), Mean Absolute Percentage Error (MAPE), dan Forecast Accuracy. Metrik ini memberikan gambaran tentang seberapa baik model memprediksi data dibandingkan dengan data aktual.
+
+1.  *Mean Squared Error* (MSE), adalah rata-rata kuadrat dari perbedaan antara nilai aktual dan nilai yang diprediksi. Nilai yang lebih rendah menunjukkan model yang lebih baik karena perbedaan antara prediksi dan aktual lebih kecil.
+2.  *Root Mean Squared Error* (RMSE), adalah akar kuadrat dari MSE. Seperti MSE, nilai yang lebih rendah menunjukkan model yang lebih baik. RMSE lebih mudah diinterpretasikan dibandingkan MSE karena dalam skala yang sama dengan data aktual.
+3.  *Mean Absolute Percentage Error* (MAPE), adalah rata-rata dari persentase absolut perbedaan antara nilai aktual dan nilai yang diprediksi. Nilai yang lebih rendah menunjukkan model yang lebih baik. MAPE lebih mudah diinterpretasikan dibandingkan MSE dan RMSE karena dalam bentuk persentase.
+4.  *Forecast Accuracy*, adalah metrik yang menunjukkan seberapa sering model memprediksi nilai yang benar. Nilai yang lebih tinggi menunjukkan model yang lebih baik.
+5.  *Cross-Validation Mean Sqared Error* (CV MSE), yaitu kesalahan antara nilai prediksi dan nilai target aktual, memberikan gambaran tentang seberapa baik model dapat memprediksi data baru berdasarkan subset data historis. Nilai yang lebih rendah menunjukkan bahwa model lebih baik dalam memprediksi data baru.
+
+Hasil perhitungan terhadap beberapa komponen metrik di atas untuk setiap model yang diuji dapat dilihat pada Tabel \ref{tab:evaltbl} di bawah ini:
+
+```{r evaltbl, echo=FALSE}
+kbl(ev, caption = "Hasil Evaluasi Model Forecasting", booktabs = T) %>%
+kable_styling(latex_options = c("striped", "hold_position"))
+```
+
+Berdasarkan metrik hasil uji model di atas, pemilihan model terbaik dilakukan dengan mempertimbangkan beberapa faktor:
+
+-   MSE dan RMSE: Model dengan nilai MSE dan RMSE yang lebih rendah biasanya dianggap lebih baik karena perbedaan antara prediksi dan aktual lebih kecil. Dalam kasus ini, model Auto ARIMA tampaknya memiliki MSE dan RMSE yang paling rendah, yang menunjukkan bahwa model ini memiliki kesalahan prediksi yang paling kecil.
+-   MAPE: Model dengan MAPE yang lebih rendah biasanya dianggap lebih baik karena perbedaan persentase antara prediksi dan aktual lebih kecil. Model Auto ARIMA juga memiliki MAPE yang paling rendah, yang menunjukkan bahwa model ini memiliki kesalahan prediksi yang paling kecil .
+-   Forecast Accuracy dan Cross Validation: Model dengan nilai akurasi prediksi yang paling tinggi biasanya dianggap lebih baik dan model yang memiliki nilai Cross Validation terendah biasanya dianggap lebih baik. Model MA memiliki nilai akurasi tertinggi, yang menunjukkan bahwa model ini memiliki tingkat akurasi yang paling baik di atara model-model lainnya.
+-   CV MSE: Model dengan nilai CV MSE paling rendah biasanya dianggap memiliki performa terbaik untuk memprediksi nilai target pada data yang belum dilihat. Dalam kasus ini, model MA menunjukkan nilai kesalahan paling kecil.
+
+```{r forcst, echo=FALSE, fig.cap='Model-model Forecasting', fig.dpi=300, fig.height=3.6, fig.width=7.48, message=FALSE, warning=FALSE}
+ptrall
+```
+
+Berdasarkan temuan-temuan di ats, model Auto ARIMA (Gambar \ref{fig:forcst}) tampaknya adalah model dengan performa terbaik karena memiliki MSE, RMSE, dan MAPE yang paling rendah, yang menunjukkan bahwa model ini memiliki kesalahan prediksi yang paling kecil. Model Auto ARIMA memiliki nilai paling rendah sehingga model ini menjadi model yang terbaik untuk memprediksi nilai di masa mendatang. Meskipun nilai akurasi dan kesalahan model Auto Arima cukup tinggi dibadingkan dengan model-model lainnya, penentuan model terbaik tidak bergantung pada satu atau dua metrik saja, namun mempertimbangkan keseluruhan metrik, dalam praktisnya pertimbangan ini lazim dilakukan.
+
+## **Analisis Distribusi**
+
+### Konflik dan Korban Jiwa
+
+Hasil analisis distribusi konflik mengungkapkan pola sebaran geografis kejadian konflik di Indonesia. Peta heatmap menyoroti wilayah-wilayah dengan tingkat kejadian konflik yang tinggi. Temuan ini memberikan pemahaman visual tentang area-area kepadatan konflik di Indonesia (Gambat \ref{fig:mapevfat}).
+
+```{r mapevfat, echo=FALSE, fig.cap='Peta Kepadatan Komflik dan Korban Jiwa', fig.dpi=300, fig.height=2, fig.width=7.48, message=FALSE, warning=FALSE}
+p_geo_adm + p_geo_fat
+```
+
+Beberapa provinsi seperti Jakarta, East Java, dan South Sulawesi memiliki tingkat kepadatan konflik yang tinggi, sementara beberapa provinsi lain seperti Bangka-Belitung, Bengkulu, dan North Kalimantan memiliki kepadatan konflik yang relatif rendah. Terlepas dari kepadatan konflik, data korban jiwa juga menunjukkan variasi yang mencolok, dengan beberapa provinsi mencatatkan jumlah korban jiwa yang tinggi, sementara beberapa provinsi lain memiliki jumlah korban jiwa yang minim. Analisis ini memberikan gambaran tentang kompleksitas dinamika konflik dan dampaknya pada tingkat kerentanan masyarakat di berbagai wilayah. Grafik dalam Gambar \ref{fig:barevfat} menunjukkan bagaimana angka konflik dan korban jiwa tersebar di seluruh wilayah.
+
+```{r barevfat, echo=FALSE, fig.cap='Jumlah Konflik dan Korban Jiwa pada Tiap Provinsi', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+create.comp(ADMIN1_ABR)
+```
+
+Untuk memudahkan dalam interpretasi, data jumlah kasus konflik dan korban jiwa di berbagai wilayah dibagi menjadi tiga kelompok menggunakan algoritma *K-means clustering* (Gambar \ref{fig:cluster}) . Untuk kasus konflik, kelompok pertama memiliki rata-rata kasus tertinggi sebesar 1.586,67 (3 wilayah), diikuti oleh kelompok kedua dengan rata-rata 700,83 (6 wilayah), dan kelompok ketiga dengan rata-rata 196.28 (29 wilayah). Sedangkan untuk korban jiwa, kelompok pertama memiliki rata-rata korban tertinggi sebesar 257.33 (3 wilayah), diikuti oleh kelompok kedua dengan rata-rata 49.20 (5 wilayah), dan kelompok ketiga dengan rata-rata 8.03 (30 wilayah).
+
+```{r cluster, echo=FALSE, fig.cap='Klusterisasi Wilayah berdasarkan Konflik dan Korban Jiwa', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+p_cluster +
+  plot_annotation(
+    caption = 'Square root scaled bar',
+    theme = theme(plot.title = element_text(size = 9))
+  )
+```
+
+Kelompok pertama merupakan kelompok dengan jumlah kasus konflik paling tinggi. Jakarta memiliki jumlah kasus tertinggi sebesar 1822 (12.43%), diikuti oleh Jawa Timur (1515, 10.37%) dan Jawa Barat (1423, 9.71%). Kelompok kedua, yang memiliki aktivitas konflik menengah, terdiri dari provinsi seperti Sulawesi Selatan (941, 6.42%), Jawa Tengah (813, 5.55%), dan Sumatra Utara (763, 5.21%). Sementara itu, provinsi seperti Papua (394, 2.69%) dan Banten (139, 2.37%) berada dalam kelompok ketiga beserta provinsi-provinsi lainnya, memiliki jumlah kasus konflik paling rendah.
+
+Untuk data jumlah korban jiwa, kelompok pertama terdiri dari Papua Pegunungan (320, 25.41%), Papua Tengah (262, 20.81%), dan Jawa Timur (190, 15.10%). Meskipun berada dalam kelompok ketiga berdasarkan jumlah kasus konflik, Papua Pegunungan dan Papua Tengah mencatat korban jiwa terbesar. Kelompok kedua terdiri dari Sulawesi Tengah (81, 6.43%), Jakarta dan Papua (masing-masing 46, 3.65%), Jawa Barat (39, 3.10%), dan Sumatera Utara (34, 2.70%). Sedangkan kelompok ketiga terdiri dari Aceh (23, 1.83%), Papua Selatan (20, 1.59%), dan Sulawesi Selatan (18, 1.43%), serta provinsi-provinsi lainnya.
+
+Distribusi konflik sepanjang waktu menunjukkan variasi di tiap wilayah. Gambar \ref{fig:sinabox} mengilustrasikan variasi tersebut. Pola distribusi konflik di wilayah-wilayah tersebut tidak normal. Lebar kotak (*interquartile range*) pada boxplot bervariasi di setiap kelompok waktu, menunjukkan perbedaan yang signifikan dalam distribusi konflik. Whiskers (jangkauan data) juga bervariasi, menunjukkan variasi yang signifikan dalam jangkauan nilai data konflik di setiap kelompok waktu. Terdapat outliers di luar whiskers pada boxplot, menandakan keberadaan nilai ekstrem atau data yang tidak lazim dalam distribusi jumlah konflik. Kemiringan boxplot dan posisi median juga memberikan petunjuk tentang karakteristik distribusi data konflik. Analisis lebih lanjut mungkin diperlukan untuk memahami faktor-faktor yang mempengaruhi distribusi tersebut, serta implikasi dari variasi yang signifikan dalam jumlah konflik antar waktu pengamatan.
+
+```{r sinabox, echo=FALSE, fig.cap='Bentuk Distribusi Konflik pada Tiap Wilayah Sepanjang Waktu Pengamatan', fig.dpi=300, fig.height=1.833, fig.width=7.48}
+p_evsina
+```
+
+Gambar \ref{fig:htadm} menggambarkan intensitas atau distribusi konflik secara visual, di mana warna yang semakin terang menandakan jumlah konflik yang semakin tinggi. Dalam grafik ini, terlihat tiga titik waktu di mana warna *tile* (ubin)mencapai puncak kecerahannya dan secara bersamaan terjadi di sebagian besar wilayah. Titik waktu pertama berada pada bulan ke-57 atau September 2019, titik ke-dua berada pada bulan ke-70 atau Oktober 2020, dan titik ke-tiga berada pada bulan ke-93 atau September 2022. secara bersamaan terjadi di senagian besar wilayah
+
+```{r htadm, echo=FALSE, fig.align='left', fig.cap='Heatmap Konflik tiap Wilayah', fig.dpi=300, fig.height=3.66, fig.width=7.48, warning=FALSE}
+p_heat_adm
+```
+
+Meningkatnya frekuensi konflik dan terjadi secara bersamaan di sebagian besar wilayah pada titik waktu tersebut mengindikasikan sesuatu peristiwa penting terjadi yang memicu respon secara bersamaan. Dari penelusuran kolom NOTE dalam dataset memperlihatkan informasi yang direpresentasikan melalui wordcloud (Gambar \ref{fig:wcdist}) di bawah, secara umum *protests* mendominasi bulan-bulan ini. Secara berurutan, wordcloud untuk bulan September 2019 (kiri) menunjukkan bahwa tidak ada informasi spesifik tentang isu sentral sebagai pemicu utama, namun beberapa kata yang muncul dapat dijadikan sebagai infornasi penting seperti kata "controversies", "corruption", dan "anticorruption". Pada bulan Oktober 2020, worcloud (tengah) mengindikasikan bahwa isu *Omnibus Law* sepertinya menjadi pemicu. Sementara itu, pada bulan September 2022, wordcloud (kanan) mengindikasikan bahwa isu sentral kenaikan harga Bahan Bakar Minyak (BBM) menjadi pemicunya. Perlu dicatat, reaksi isu-isu sentral tersebut berpeluang berlanjut pada bulan setelahnya.
+
+```{r wcdist, fig.cap='Catatan untuk bulan September 2019 (kiri), Oktober 2020 (tengah), dan September 2022', echo=FALSE, fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE, fig.align='center'}
+par(mfrow = c(1,3), oma = c(0,0,0,0), mar = c(0,0,0,0))
+create.wc(57, 30)
+create.wc(70, 50)
+create.wc(93, 50)
+```
+
+Dengan grafik yang berbeda, distribusi kepadatan konflik dapat digambarkan, terutama distribusi konflik terkait dengan waktu. Grafik di bawah (Gambar \ref{fig:den2d}) menunjukkan distribusi kepadatan data konflik setiap bulan. Garis kontur yang dihasilkan menunjukkan tingkat kepadatan, dengan garis yang lebih terang menunjukkan bulan-bulan dengan kepadatan yang lebih tinggi. Dari grafik ini, kita dapat melihat pola distribusi data konflik di setiap bulan. Kepadatan konflik berada (estimasi) pada bulan ke-57 sampai bulan ke-84.
+
+```{r den2d, echo=FALSE, fig.cap='Grafik Kepadatan 2D Konflik terkait Waktu', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+pden2d
+```
+
+Selanjutnya, ditinjau dari tingkat administratif 2 (Kabupaten/Kota) dan 3 (Kecamatan), Gambar \ref{fig:adm23} menunjukkan bahwa untuk tingkat daerah administratif 2 seperti Jakarta Pusat, Jakarta Selatan, dan Makassar merupakan tiga wilayah kota/kabupaten administratif dengan total jumlah konflik tertinggi, masing-masing dengan 1085, 457, dan 421. Di sisi lain, untuk wilayah kecamatan yang lebih spesifik di tingkat lokal, daerah Gambir, Mampang Prapatan, dan Medan Baru sebagai tiga wilayah teratas, memiliki jumlah frekuensi berturut-turut sebesar 1085, 457, dan 416. Analisis data korban jiwa pada tingkat administratif yang sama menunjukkan pola yang menarik. Malang, Nduga, dan Puncak adalah tiga wilayah dengan jumlah korban jiwa tertinggi, dengan masing-masing mencapai 137, 122, dan 92. Sementara itu, data juga menyoroti tingkat korban jiwa di tingkat kecamatan, dengan Klojen, Kenyam, dan Dekai menjadi tiga wilayah teratas, memiliki jumlah kematian berturut-turut sebesar 135, 60, dan 58.
+
+```{r adm23, echo=FALSE, fig.align='left', fig.cap="Sebaran Konflik dan  Korban Jiwa pada Level Kabupaten/Kota dan Kecamatan (7 Besar)", fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE}
+# p_adm_evt_fat
+p_adm_evt_fat
+```
+
+### **Jenis Konflik dan Korban Jiwa**
+
+#### **Sebaran Setiap Jenis Konflik**
+
+Selanjutnya, Gambar \ref{fig:typfat} menunjukkan data jumlah kemunculan jenis konflik dan jumlah korban jiwa untuk masing-masing jenisnya. Terdapat enam jenis konflik yang disajikan, yaitu *Battles*, *Explosions/Remote violence*, *Protests*, *Riots*, *Strategic developoments*, dan *Violence against civilians*. Dapat dilihat bahwa *Battles* memiliki frekuensi terbanyak dengan 483 kasus, dan memiliki jumlah korban jiwa terbanyak yaitu 414 jiwa. Selain itu, *Explosions*/*Remote violence* memiliki 31 kasus dengan 60 jiwa korban. *Protests* menjadi jenis konflik yang paling sering terjadi dengan 11.249 kasus, tetapi memiliki jumlah korban jiwa terendah yaitu 12 jiwa. Hal ini menunjukkan bahwa *Protests* sering terjadi, tetapi keparahan yang terjadi relatif lebih rendah dibandingkan dengan jenis konflik lain.
+
+```{r typfat, echo=FALSE, fig.cap='Jumlah Kemunculan Tiap Jenis Konflik dan Korban Jiwa', fig.dpi=300, fig.height=1.833, fig.width=7.48}
+p_typ
+```
+
+Peta choropleth di bawah (Gambar \ref{fig:maptype}) memberikan gambawan visual tentang distribusi spasial kepadatan konflik di Indonesia. Wilayah yang berwarna gelap menunjukkan tingkat kepadatan konflik yang tinggi, sedangkan wilayah yang berwarna terang menunjukkan tingkat kepadatan yang rendah. *Protests* adalah jenis konflik memiliki kepadatan paling tinggi di bandingkan dengan jenis lain. *Protests* bersama *riots* dan *violence against civilians* adalah jenis konflik yang memiliki persebaran yang merata di seluruh wilayah. Sementara itu, *Battles* dan *strategic developments* hanya menyisakan beberapa wilayah yang tidak terdampak, serta *explosions/remote violence* hanya terjadi di beberapa wilayah saja.
+
+```{r maptype, echo=FALSE, fig.cap='Peta Distribusi Koflik berdasarkan Jenis', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+p_cho_adm_evn
+```
+
+Grafik yang disajikan menggambarkan distribusi jumlah insiden berbagai jenis konflik di beberapa provinsi di Indonesia. Data tersebut mencakup jenis konflik seperti Battles, Explosions/Remote violence, Protests, Riots, Strategic developments, dan Violence against civilians. Dari grafik, terlihat bahwa provinsi Papteng dan Papeg memiliki jumlah insiden tertinggi untuk jenis konflik Battles, sementara Jakarta merupakan tempat terbanyaknya insiden Explosions/Remote violence. Sementara itu, beberapa provinsi seperti Jakarta, Jatim, dan Jabar menunjukkan tingkat insiden Protests yang signifikan. Riots cenderung terjadi di provinsi Sulsel, Jabar, dan Jakarta. Di sisi lain, kejadian Strategic developments terbatas di beberapa provinsi seperti Papteng, Papeg, dan Papua. Sedangkan, kejadian Violence against civilians, meskipun jumlah insidennya lebih rendah, menunjukkan pola yang tersebar di beberapa provinsi dengan insiden tertinggi terjadi di Papteng dan Papeg. Analisis ini memberikan wawasan yang mendalam tentang pola konflik di berbagai wilayah Indonesia, yang penting untuk menginformasikan kebijakan dan tindakan yang tepat dalam upaya penanganan konflik di tingkat regional.
+
+```{r evnadm, echo=FALSE, fig.cap='Distribusi Jenis Konflik di Provinsi-provinsi Indonesia (5 Besar)', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+pevn_adm
+```
+
+Grafik di bawah (Gambar \ref{fig:statype}) menunjukkan distribusi dan proporsi jenis konflik di setiap wilayah. Setiap warna pada setiap bar mewakili masing-masing jenis konflik. Dari grafik tersebut, kita dapat menyimpulkan bahwa di sebagian besar wilayah, *protests* mendominasi, diikuti oleh *riots* dan *violence against civilians* (selaras dengan grafik \ref{fig:typfat}). Wilayah Papua Pegunungan (PE) dan Papua Tengah (PT) adalah wilayah di mana *protests* tidak mendominasi, sebagai gantinya, kedua wilayah tersebut didominasi oleh *violence against civilians* dan *battles*.
+
+```{r statype, echo=FALSE, fig.cap='Proporsi Tiap Jenis Konflik dalam Tiap Wilayah', fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE}
+p_evt_adm1_prc
+```
+
+Selanjutnya, kita telaah distribusi dan pola kejadian konflik berdasarkan subjenisnya melalui grafik dalam Gambar \ref{fig:subtype} di bawah. Berdasarkan grafik ini, ditemukan bahwa subtipe *Peaceful protest* adalah yang paling umum dalam kategori *Protests,* sementara *Armed clash* adalah yang paling umum dalam kategori *Battles*. Selain itu, subtipe *Looting/property destruction* menjadi yang paling umum dalam kategori *Strategic developments*, dan *Attack* menjadi yang paling umum dalam kategori *Violence against civilians.*
+
+```{r subtype, echo=FALSE, fig.cap='Frekuensi Subjenis Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+p_subtype
+```
+
+#### **Jenis Konflik dan Korban Jiwa**
+
+Melalui peta di bawah (Gambar \ref{fig:maptypefat}), sebaran korban jiwa berdasarkan jenis konflik dapat dipresentasikan dengan jelas. Peta ini memberikan gambaran umum tentang sebaran spasial korban jiwa di berbagai wilayah, menyoroti wilayah-wilayah dengan tingkat korban jiwa yang berbeda-beda.
+
+```{r maptypefat, echo=FALSE, fig.cap='Peta Distribusi Korban Jiwa berdasarkan Jenis Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+p_cho_adm_fat
+```
+
+Di samping itu, grafik di bawah (Gambar \ref{fig:typefat}), kita dapat menyoroti lima wilayah dengan koeban jiwa tertinggi. Dari grafik, kita dapat melihat bahwa *Battles* merupakan jenis konflik yang menimbulkan korban jiwa terbesar, dengan jumlah korban jiwa tertinggi terjadi di wilayah Papua Tengah dan Papua Pegunungan. Sementara itu, *Explosions/Remote violence* cenderung mengakibatkan korban jiwa di wilayah Jawa Timur dan Jakarta, dengan jumlah korban tertinggi di Jawa Timur. Papua memiliki jumlah korban jiwa *Protests* tertinggi, diikuti oleh Papua Barat dan yang lainnya. *Riots* terutama menyebabkan korban jiwa di Jawa Timur dan Papua Pegunungan, dengan Jawa Timur memiliki jumlah korban jiwa tertinggi. Sementara itu, hanya satu korban jiwa dari *Strategic developments,* yakni terjadi di Jakarta. *Violence against civilians*, Papua Pegunungan memiliki jumlah korban jiwa tertinggi, diikuti oleh Papua Tengah dan Sulawesi Tengah.
+
+```{r typefat, echo=FALSE, fig.cap='Korban Jiwa Tiap Wilayah berdasarkan Jenis Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+pfat_adm
+```
+
+### Aktor
+
+Analisis interaksi antara aktor-aktor dalam konflik menunjukkan pola yang menarik (Gambar \ref{fig:actnet}). Rioters dan State Forces memiliki interaksi terbanyak, dengan total frekuensi 585 dan 578, menunjukkan intensitas konflik antara kedua entitas tersebut. Selanjutnya, State Forces dan Civilians juga memiliki interaksi yang cukup tinggi, dengan total frekuensi 572, menegaskan peran penting mereka dalam konflik. Rebel Groups memiliki interaksi dengan State Forces dan Civilians, yang menunjukkan partisipasi mereka dalam konflik. Political Militias dan Identity Militias memiliki interaksi dengan Civilians dan State Forces, serta dengan dirinya sendiri, menunjukkan bahwa mereka memiliki peran dalam konflik dan mungkin beroperasi dalam beberapa front. External/Other Forces memiliki interaksi dengan Civilians dan Political Militias, menunjukkan bahwa mereka juga berperan dalam konflik dan mungkin beroperasi dalam beberapa front.
+
+```{r actnet, echo=FALSE, fig.cap='Intensitas Interaksi antar Aktor Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+space + pnet + space + plot_layout(width = c(1, 4, 1))
+```
+
+Beberapa aktor memiliki interaksi dengan dirinya sendiri, seperti Rioters dan Political Militias, yang menunjukkan bahwa mereka memiliki subgrup yang beroperasi secara independen dan berinteraksi satu sama lain. Beberapa aktor memiliki interaksi minimal dengan aktor lain, seperti Identity Militias dan State Forces, yang menunjukkan bahwa mereka mungkin memiliki peran yang lebih terbatas dalam konflik. Pola interaksi menunjukkan bahwa beberapa aktor memiliki interaksi yang lebih intensif dengan aktor lain, sementara beberapa aktor memiliki interaksi yang lebih terdistribusi. Fluktuasi interaksi antara aktor-aktor dapat menunjukkan bahwa konflik tidak statis dan dapat berubah seiring waktu atau berdasarkan faktor-faktor lain. Analisis ini dapat membantu dalam memahami dinamika konflik dan identifikasi aktor-aktor kunci serta hubungan yang mungkin mempengaruhi eskalasi atau deeskalasi konflik.
+
+Dari hasil analisis, terlihat bahwa sebagian besar korban jiwa disebabkan oleh tindakan yang dilakukan oleh Civilians dan State Forces, dengan masing-masing mencatat total korban jiwa sebanyak 570 dan 519 (Gambar \ref{fig:actfat}). Hal ini menunjukkan bahwa, dalam konteks konflik yang dipelajari, peran dan tindakan dari kedua kelompok ini memiliki dampak signifikan terhadap angka kematian.
+
+```{r actfat, echo=FALSE, fig.cap='Perbandingan Jumlah Kemunculan Aktor dan Korban Jiwa Akibat Aktor', fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE}
+p_actor
+```
+
+Di sisi lain, Rebel Groups, Rioters, Identity Militias, Political Militias, dan External/Other Forces memiliki kontribusi yang relatif lebih rendah terhadap angka korban jiwa, dengan total korban jiwa yang jauh lebih kecil dibandingkan Civilians dan State Forces. Meskipun demikian, penting untuk diingat bahwa kontribusi dari setiap aktor dalam konflik ini dapat memiliki implikasi yang signifikan terhadap situasi keseluruhan, terutama dalam hal keamanan dan stabilitas.
+
+## Analisis Korelasi
+
+Analisis korelasi berkaitan dengan mengukur tingkat hubungan antara dua variabel. Korelasi statistik mengukur sejauh mana perubahan dalam satu variabel berhubungan dengan perubahan dalam variabel lainnya.
+
+## **Autokorelasi Spasial**
+
+Uji Monte Carlo Moran's I digunakan untuk menguji signifikansi pola spasial dalam data. Dengan kata lain, uji ini digunakan untuk menentukan apakah perubahan data pada wilayah tertentu dapat mempengaruhi perubahan data pada wilayah lain yang berdekatan. Dengan melakukan simulasi Monte Carlo, kita dapat membandingkan distribusi nol dari Moran's I dengan nilai Moran's I asli. Pengujian ini akan diterapkan pada data Jumlah Konflik (*Events*) dan Jumlah Korban Jiwa (*Fatalities*).
+
+Pada data *Events*, uji Moran's I menunjukkan bahwa terdapat korelasi spasial positif signifikan, dengan nilai p-value yang lebih rendah dari 0,05. Dari hasil uji Monte Carlo Moran's I, didapati bahwa nilai Moran's I statistic yang dihasilkan adalah 0.36989, dengan observed rank 990. P-value yang dihasilkan adalah 0,01. Hal ini menunjukkan bahwa terdapat efek spasial yang signifikan pada variabel *Events*. Sedangkan pada data *Fatalities*, uji Moran's I menunjukkan bahwa terdapat korelasi spasial yang tidak signifikan, dengan nilai p-value yang lebih besar dari 0,05. Dari hasil uji Monte Carlo Moran's I, dapat dilihat bahwa nilai Moran's I statistic yang dihasilkan adalah 0.20883, dengan observed rank 944. P-value yang dihasilkan adalah 0,056. Hal ini menunjukkan bahwa tidak ada efek spasial yang signifikan pada variabel *Fatalities*. Walaupun demikian, nilai p-value pada data *fatalities* yang hampir mendekati batas signifikansi, yang dapat diinterpretasikan bahwa ada kemungkinan efek spasial meskipun sangat kecil atau lemah.
+
+Grafik permutasi Monte Carlo untuk uji Moran's I dapat dilihat dalam Gambar \ref{fig:moran}. Grafik ini digunakan untuk menunjukkan distribusi permutasi dari nilai statistik Moran's I, yang digunakan untuk menguji korelasi spasial. Dalam grafik ini, area kuning menunjukkan nilai Moran's I yang dihasilkan oleh data asli, sedangkan area hijau atau merah menunjukkan distribusi permutasi Moran's I yang dihasilkan dari percobaan-percobaan Monte Carlo. Grafik ini dapat digunakan untuk membandingkan nilai Moran's I dari data asli dengan distribusi permutasi, dan memperkirakan kepercayaan dari nilai Moran's I tersebut. Jika nilai Moran's I dari data asli lebih besar dari nilai Moran's I pada distribusi permutasi, maka terdapat korelasi spasial yang signifikan.
+
+```{r moran, echo=FALSE, fig.cap='Perbandingan Signifikansi Indeks Moran antara Data Events dan Fatalities', fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE}
+p_moran
+```
+
+Dari hasil uji tersebut, kita dapat mengatakan bahwa terdapat efek spasial yang signifikan pada variabel *Events*, sedangkan tidak signifikan pada variabel *Fatalities*. Hal ini dapat menjadi dasar untuk melakukan analisis lebih lanjut terhadap pola spasial yang terjadi pada data. Selain itu, hasil dari uji Moran's I dapat digunakan sebagai acuan untuk membuat model spasial yang lebih kompleks, seperti model regresi spasial atau analisis klastering.
+
+Analisis klastering dengan menggunakan Moran's Plot (Gambar \ref{fig:moranplot}) memberikan gambaran yang lebih intuitif terkait dengan autokorelasi spasial dalam data *events* dan *fatalities*. Grafik ini terbagi ke dalam 4 klaster, kluster 1 (kanan atas) adalah kluster di mana terdapat autokorelasi spasial positif, yang berarti peningkatan data konflik atau korban jiwa yang terjadi pada lokasi tersebut cenderung mempengaruhi peningkatan data pada area-area sekitarnya. Sedangkan kluster 3 (kiri bawah) adalah kluster di mana terdapat autokorelasi spasial negatif, yang sederhananya berarti konflik dan korban jiwa pada lokasi-lokasi yang berada pada kluster ini cenderung terjadi secara acak. Semestara itu, kluster 2 (kiri atas) dan kluster 4 (kanan bawah) adalah lokasi-lokasi yang memiliki potensi sebagai outlier.
+
+```{r moranplot, echo=FALSE, fig.cap='Grafik Autokorelasi Spasial', fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE}
+p_moranp
+```
+
+Dengan memahami pola spasial clustering dari konflik ini, pemangku kepentingan dapat lebih efektif dalam merancang intervensi yang bertujuan untuk mencegah dan mengurangi konflik, serta mempromosikan perdamaian dan keamanan. Salah satunya dengan menjaga kodusifitas pada lokasi-lokasi *hospot* berada.
+
+### **Korelasi antar Jenis Konflik**
+
+Matriks korelasi antar jenis konflik (Gambar \ref{fig:cortype}) berfungsi sebagai alat analisis untuk mengeksplorasi dan mengukur sejauh mana hubungan saling memengaruhi antar berbagai jenis konflik. Dengan mengevaluasi korelasi antar variabel-variabel konflik, matriks ini memberikan wawasan tentang sejauh mana perubahan dalam satu jenis konflik dapat berkaitan dengan perubahan dalam jenis konflik lainnya. Analisis ini dapat membantu mengidentifikasi pola dan dinamika kompleks yang mendasari konflik, memberikan dasar untuk memahami interaksi antar variabel.
+
+```{r cortype, echo=FALSE, fig.cap='Korelasi antar Jenis Konflik', fig.dpi=300, fig.height=2.3, fig.width=7.48, message=FALSE, warning=FALSE}
+p_cor_con2
+```
+
+Dari hasil analisis korelasi, sejumlah temuan menarik dapat diidentifikasi. Terdapat korelasi positif yang tinggi antara frekuensi *Battles* dan aktivitas *Strategic developments*, dalam hal ini mencapai nilai 0.6, yang mengindikasikan bahwa peningkatan salah satu dari jenis konflik tersebut mempengaruhi peningkatan konflik satu sama lain. Selain itu, frekuensi *Protests* dan *riots* menunjukkan korelasi positif yang tinggi (0.7), menandakan bahwa peningkatan *protes* dapat berkorelasi signifikan dengan peningkatan *riots* atau sebaliknya.
+
+Dalam tingkat korelasi yang menengah, terdapat hubungan positif antara *Battles* dan *violence against civilians* (VAC) sebesar 0.5, menandakan bahwa peningkatan *battles* berkorelasi dengan peningkatan VAC. Selain itu, frekuensi *Protests* dan frekuensi *strategic developments* memiliki korelasi positif sebesar 0.3, menunjukkan bahwa peningkatan *protes* berkorelasi dengan *strategic developments*. Namun, terdapat hubungan yang lebih lemah antara frekuensi *battles* dan *protests* sebesar 0.3, menunjukkan bahwa kedua variabel ini tidak memiliki hubungan yang kuat satu sama lain. Selain itu, korelasi antara frekuensi *protests* dan frekuensi *explosions/remote violence* (ERV) adalah negatif dan lemah (-0.1), yang menunjukkan tidak ada korelasi antara keduanya.
+
+\pagebreak
+
+# Referensi
+
+```{=html}
+<!--
+# References
+\setlength{\parindent}{-0.2in}
+\setlength{\leftskip}{0.2in}
+\setlength{\parskip}{8pt}
+\vspace*{-0.2in}
+\noindent
+-->
+```
