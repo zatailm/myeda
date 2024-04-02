@@ -91,14 +91,22 @@ df_cofa <- data_monthly[, c(4:9)] %>%
 
 df_cor <- round(cor(df_cofa), 1)
 p.mat <- cor_pmat(df_cofa)
-clrs <- c('#0d0887', 'white', '#fb9f3a')
-
-custom_breaks <- seq(-1, 1, by = 0.5)
 
 p_cor_con2 <- ggcorrplot(
-  df_cor, hc.order = TRUE, type = 'lower', outline.color = 'white', lab = TRUE, 
-  lab_size = 2, method = 'circle') +
-  scale_fill_gradient2(low = clrs[1], mid = clrs[2], high = clrs[3],
-                       midpoint = 0, breaks = custom_breaks, limits = c(-1, 1)) +
-  theme_zvis_grid(9) + theme(axis.title = element_blank()) +
-  labs(fill = 'coefficient')
+  df_cor, tl.cex = 8.5, hc.order = TRUE, type = 'lower', outline.color = 'white', lab = TRUE, 
+  lab_size = 2.5, ggtheme = NULL, colors = c(zcol[2], 'white', zcol[1]), method = 'circle',
+  legend.title = NULL, p.mat = p.mat) +
+  theme(legend.position = 'right', axis.text.x = element_text(angle = 0, hjust = .5),
+        legend.key.height = unit(10, 'mm'), legend.key.width = unit(3, 'mm'))
+
+##------------------------------------------------------------------------------------- JITTER
+
+p_dis_evn <- acled %>%
+  ggplot(aes(x = ADMIN1_ABR, y = fct_rev(EVENT_TYPE_SRT))) +
+  geom_jitter(aes(color = EVENT_TYPE_SRT), size = .3, show.legend = FALSE) +
+  scale_color_zata() +
+  theme(axis.text.x = element_text(hjust = .5)) +
+  guides(color = guide_legend(nrow = 1)) +
+  labs(x = NULL, y = NULL)
+
+

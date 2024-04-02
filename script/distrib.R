@@ -150,21 +150,46 @@ p_cluster <- ggplot() +
 # 
 # print(p_cluster)
 
-## sinaplot
-dist_plot <- acled %>%
-  ggplot(aes(x = ADMIN1_ABR, y = EVENT_DATE, color = ADMIN1_ABR)) +
-  scale_y_datetime(breaks = seq(from = min(acled$EVENT_DATE), to = max(acled$EVENT_DATE), 
-                                by = "2 years"), date_labels = "%Y") +
-  labs(x = l$pro, y = l$thn)
+# Dist. scatt
+generate_plot <- function(data, geom = "jitter", method = "density", axis_text = TRUE) {
+  if (geom == "jitter") {
+    p <- ggplot(data, aes(x = factor(ADMIN1_ABR), y = EVENT_DATE)) +
+      geom_jitter(aes(color = ADMIN1_ABR, fill = ADMIN1_ABR), size = .3, pch = 20)
+  } else if (geom == "sina") {
+    if (method == "density") {
+      p <- ggplot(data, aes(x = factor(ADMIN1_ABR), y = EVENT_DATE)) +
+        geom_sina(method = 'density', aes(color = ADMIN1_ABR, fill = ADMIN1_ABR), size = .3, pch = 20) +
+        geom_violin(color = zcol[1], fill = '#ffffff00', linewidth = .3)
+    } else if (method == "boxplot") {
+      p <- ggplot(data, aes(x = factor(ADMIN1_ABR), y = EVENT_DATE)) +
+        geom_sina(method = 'density', aes(color = ADMIN1_ABR, fill = ADMIN1_ABR), size = .3, pch = 20, alpha = .7, color = 'darkgrey') +
+        geom_boxplot(width = .4, color = zcol[1], fill = '#fde72570', size = .3, outlier.shape = 20, outlier.size = .3, position = position_nudge(.2))
+    }
+  }
+  
+  p <- p + 
+    scale_color_viridis(option = 'D', discrete = TRUE, begin = .2, end = .95) +
+    scale_fill_viridis(option = 'D', discrete = TRUE, begin = .2, end = .95) +
+    scale_y_datetime(breaks = seq(from = min(data$EVENT_DATE), to = max(data$EVENT_DATE), by = "2 years"), date_labels = "%Y") +
+    theme(legend.position = 'none', panel.border = element_blank()) 
+  
+  if (!axis_text) {
+    p <- p + theme(axis.text.x = element_blank()) +
+      theme(axis.title = element_blank())
+  } else {
+    p <- p + theme(axis.title.y = element_blank()) +
+      labs(x = 'Province (Abbreviation)')
+  }
+  
+  return(p)
+}
 
-p_evsina <- dist_plot +
-  geom_sina(method = 'density', alpha = .7, size =.3, show.legend = FALSE, 
-            color = 'darkgrey', pch = 20) +
-  geom_boxplot(width = .4, color = zcol[1], fill = '#fde72570', size = .3,
-               outlier.shape = 20, outlier.size = .3, position = position_nudge(.2))  +
-  # theme_zvis_hgrid(9) +
-  theme(axis.title.y = element_blank(), panel.border = element_blank()) +
-  labs(x = l$prab)
+dfdist <- acled %>% mutate(ADMIN1_ABR = fct_rev(fct_infreq(ADMIN1_ABR)))
+
+p_disj <- generate_plot(dfdist, geom = "jitter", axis_text = FALSE)
+p_diss <- generate_plot(dfdist, geom = "sina", method = "density", axis_text = FALSE)
+p_disb <- generate_plot(dfdist, geom = "sina", method = "boxplot")
+p_dissc <- wrap_plots(p_disj, p_diss, p_disb, ncol = 1)
 
 ## Heatmap
 # df_heat_adm <- acled %>%
@@ -172,32 +197,54 @@ p_evsina <- dist_plot +
 #   count(ADMIN1_ABR, MONTH) %>%
 #   complete(ADMIN1_ABR, MONTH, fill = list(n = 0))
 
-df_heat_adm <- acled %>%
+df_heat_adm_evn <- acled %>%
   count(CMONTH, ADMIN1_ABR) %>%
   complete(ADMIN1_ABR, CMONTH, fill = list(n = 0))
-# 
-# dd %>% ggplot(aes(x = CMONTH, y = reorder(ADMIN1_ABR, n))) +
-#   geom_tile(mapping = aes(fill = n), color = 'black') +
-#   scale_fill_viridis(option = 'D', trans = 'log1p') +
-#   scale_x_continuous(breaks = seq(0, 108, 1))
 
-p_heat_adm <- df_heat_adm %>%
-  ggplot(aes(x = CMONTH, y = reorder(ADMIN1_ABR, n))) +
-  geom_tile(mapping = aes(fill = n), color = '#000000', linewidth = .25) +
-  scale_x_continuous(breaks = seq(2, 108, 108/36), expand = c(0, 0)) +
-  theme(legend.position = 'top', legend.justification = 'right', 
-        axis.title.x = element_blank(), legend.key.height = unit(0.15, "cm"),
-        legend.key.width = unit(1, "cm"), legend.title = element_text(size = 6),
-        legend.text = element_text(size = 6), legend.ticks = element_blank(),
-        panel.border = element_blank(), axis.text = element_text(size = 6),
-        axis.ticks.length = unit(1, 'mm')) +
-  scale_y_discrete(name = NULL, position = "right") +
-  scale_fill_viridis(
-    option = 'D', trans = 'log10', begin = .2, end = 1,
-    breaks = round(10^seq(log10(1), log10(max(df_heat_adm$n)), length.out = 4)), 
-    name = paste(l$frq, ' / ', l$bln),
-    guide = guide_colorbar(direction = "horizontal"),
-    na.value = "#440154")
+df_heat_adm_fat <- acled %>%
+  group_by(ADMIN1_ABR, CMONTH) %>%
+  summarise(n = sum(FATALITIES), .groups = 'drop_last') %>%
+  complete(CMONTH = 1:108) %>%
+  replace_na(list(n = 0))
+
+create.heatmap <- function(data, event = TRUE) {
+  p <- data %>%
+    ggplot(aes(x = CMONTH, y = reorder(ADMIN1_ABR, n))) +
+    geom_tile(mapping = aes(fill = n), color = '#000000', linewidth = .25) +
+    scale_x_continuous(breaks = seq(2, 108, 108/36), expand = c(0, 0)) +
+    theme(legend.position = 'top', legend.justification = 'right', 
+          axis.title.x = element_blank(), legend.key.height = unit(0.15, "cm"),
+          legend.key.width = unit(1, "cm"), legend.title = element_text(size = 6),
+          legend.text = element_text(size = 6), legend.ticks = element_blank(),
+          panel.border = element_blank(), axis.text = element_text(size = 6),
+          axis.ticks.length = unit(1, 'mm')) +
+    scale_y_discrete(name = NULL, position = "right")
+  
+  if (event) {
+    p <- p + 
+      scale_fill_viridis(
+        option = 'D', trans = 'log10', begin = .2, end = 1,
+        breaks = round(10^seq(log10(1), log10(max(df_heat_adm_evn$n)), length.out = 4)),
+        name = paste(l$frq, ' / ', l$bln),
+        guide = guide_colorbar(direction = "horizontal"),
+        na.value = "#440154")
+  } else {
+    p <- p +
+      scale_fill_viridis(
+        option = 'C', trans = 'log10', begin = .2, end = 1,
+        # breaks = round(exp(seq(log(1), log(max(df_heat_adm_fat$n)), length.out = 4))), 
+        breaks = round(10^seq(log10(1), log10(max(df_heat_adm_fat$n)), length.out = 4)),
+        name = paste(l$frq, ' / ', l$bln),
+        guide = guide_colorbar(direction = "horizontal"),
+        na.value = "#440154")
+  }
+  
+  return(p)
+}
+
+p_heat_evn <- create.heatmap(df_heat_adm_evn, event = TRUE)
+p_heat_fat <- create.heatmap(df_heat_adm_fat, event = FALSE)
+
 
 # bar per type
 nn <- 7

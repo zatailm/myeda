@@ -362,14 +362,14 @@ Untuk data jumlah korban jiwa, kelompok pertama terdiri dari Papua Pegunungan (3
 
 Distribusi konflik sepanjang waktu menunjukkan variasi di tiap wilayah. Gambar \ref{fig:sinabox} mengilustrasikan variasi tersebut. Pola distribusi konflik di wilayah-wilayah tersebut tidak normal. Lebar kotak (*interquartile range*) pada boxplot bervariasi di setiap kelompok waktu, menunjukkan perbedaan yang signifikan dalam distribusi konflik. Whiskers (jangkauan data) juga bervariasi, menunjukkan variasi yang signifikan dalam jangkauan nilai data konflik di setiap kelompok waktu. Terdapat outliers di luar whiskers pada boxplot, menandakan keberadaan nilai ekstrem atau data yang tidak lazim dalam distribusi jumlah konflik. Kemiringan boxplot dan posisi median juga memberikan petunjuk tentang karakteristik distribusi data konflik. Analisis lebih lanjut mungkin diperlukan untuk memahami faktor-faktor yang mempengaruhi distribusi tersebut, serta implikasi dari variasi yang signifikan dalam jumlah konflik antar waktu pengamatan.
 
-```{r sinabox, echo=FALSE, fig.cap='Bentuk Distribusi Konflik pada Tiap Wilayah Sepanjang Waktu Pengamatan', fig.dpi=300, fig.height=1.833, fig.width=7.48}
-p_evsina
+```{r sinabox, echo=FALSE, fig.cap='Pola Distribusi Konflik pada Tiap Wilayah Sepanjang Waktu Pengamatan', fig.dpi=300, fig.height=3.2, fig.width=7.48}
+p_dissc
 ```
 
 Gambar \ref{fig:htadm} menggambarkan intensitas atau distribusi konflik secara visual, di mana warna yang semakin terang menandakan jumlah konflik yang semakin tinggi. Dalam grafik ini, terlihat tiga titik waktu di mana warna *tile* (ubin)mencapai puncak kecerahannya dan secara bersamaan terjadi di sebagian besar wilayah. Titik waktu pertama berada pada bulan ke-57 atau September 2019, titik ke-dua berada pada bulan ke-70 atau Oktober 2020, dan titik ke-tiga berada pada bulan ke-93 atau September 2022. secara bersamaan terjadi di senagian besar wilayah
 
 ```{r htadm, echo=FALSE, fig.align='left', fig.cap='Heatmap Konflik tiap Wilayah', fig.dpi=300, fig.height=3.66, fig.width=7.48, warning=FALSE}
-p_heat_adm
+p_heat_evn
 ```
 
 Meningkatnya frekuensi konflik dan terjadi secara bersamaan di sebagian besar wilayah pada titik waktu tersebut mengindikasikan sesuatu peristiwa penting terjadi yang memicu respon secara bersamaan. Dari penelusuran kolom NOTE dalam dataset memperlihatkan informasi yang direpresentasikan melalui wordcloud (Gambar \ref{fig:wcdist}) di bawah, secara umum *protests* mendominasi bulan-bulan ini. Secara berurutan, wordcloud untuk bulan September 2019 (kiri) menunjukkan bahwa tidak ada informasi spesifik tentang isu sentral sebagai pemicu utama, namun beberapa kata yang muncul dapat dijadikan sebagai infornasi penting seperti kata "controversies", "corruption", dan "anticorruption". Pada bulan Oktober 2020, worcloud (tengah) mengindikasikan bahwa isu *Omnibus Law* sepertinya menjadi pemicu. Sementara itu, pada bulan September 2022, wordcloud (kanan) mengindikasikan bahwa isu sentral kenaikan harga Bahan Bakar Minyak (BBM) menjadi pemicunya. Perlu dicatat, reaksi isu-isu sentral tersebut berpeluang berlanjut pada bulan setelahnya.
@@ -379,6 +379,10 @@ par(mfrow = c(1,3), oma = c(0,0,0,0), mar = c(0,0,0,0))
 create.wc(57, 30)
 create.wc(70, 50)
 create.wc(93, 50)
+```
+
+```{r htfat, echo=FALSE, fig.align='left', fig.cap='Heatmap Korban Jiwa tiap Wilayah', fig.dpi=300, fig.height=3.66, fig.width=7.48, warning=FALSE}
+p_heat_fat
 ```
 
 Dengan grafik yang berbeda, distribusi kepadatan konflik dapat digambarkan, terutama distribusi konflik terkait dengan waktu. Grafik di bawah (Gambar \ref{fig:den2d}) menunjukkan distribusi kepadatan data konflik setiap bulan. Garis kontur yang dihasilkan menunjukkan tingkat kepadatan, dengan garis yang lebih terang menunjukkan bulan-bulan dengan kepadatan yang lebih tinggi. Dari grafik ini, kita dapat melihat pola distribusi data konflik di setiap bulan. Kepadatan konflik berada (estimasi) pada bulan ke-57 sampai bulan ke-84.
@@ -442,6 +446,10 @@ Di samping itu, grafik di bawah (Gambar \ref{fig:typefat}), kita dapat menyoroti
 pfat_adm
 ```
 
+```{r jittype, echo=FALSE, fig.cap='Distribusi Titik-titik Jenis Konflik di Seluruh Wilayah', fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE}
+p_dis_evn
+```
+
 ### Aktor
 
 Analisis interaksi antara aktor-aktor dalam konflik menunjukkan pola yang menarik (Gambar \ref{fig:actnet}). Rioters dan State Forces memiliki interaksi terbanyak, dengan total frekuensi 585 dan 578, menunjukkan intensitas konflik antara kedua entitas tersebut. Selanjutnya, State Forces dan Civilians juga memiliki interaksi yang cukup tinggi, dengan total frekuensi 572, menegaskan peran penting mereka dalam konflik. Rebel Groups memiliki interaksi dengan State Forces dan Civilians, yang menunjukkan partisipasi mereka dalam konflik. Political Militias dan Identity Militias memiliki interaksi dengan Civilians dan State Forces, serta dengan dirinya sendiri, menunjukkan bahwa mereka memiliki peran dalam konflik dan mungkin beroperasi dalam beberapa front. External/Other Forces memiliki interaksi dengan Civilians dan Political Militias, menunjukkan bahwa mereka juga berperan dalam konflik dan mungkin beroperasi dalam beberapa front.
@@ -490,7 +498,7 @@ Dengan memahami pola spasial clustering dari konflik ini, pemangku kepentingan d
 
 Matriks korelasi antar jenis konflik (Gambar \ref{fig:cortype}) berfungsi sebagai alat analisis untuk mengeksplorasi dan mengukur sejauh mana hubungan saling memengaruhi antar berbagai jenis konflik. Dengan mengevaluasi korelasi antar variabel-variabel konflik, matriks ini memberikan wawasan tentang sejauh mana perubahan dalam satu jenis konflik dapat berkaitan dengan perubahan dalam jenis konflik lainnya. Analisis ini dapat membantu mengidentifikasi pola dan dinamika kompleks yang mendasari konflik, memberikan dasar untuk memahami interaksi antar variabel.
 
-```{r cortype, echo=FALSE, fig.cap='Korelasi antar Jenis Konflik', fig.dpi=300, fig.height=2.3, fig.width=7.48, message=FALSE, warning=FALSE}
+```{r cortype, echo=FALSE, fig.cap='Korelasi antar Jenis Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
 p_cor_con2
 ```
 
