@@ -3,3 +3,4 @@
 **.tex linguist-detectable-language=R
 **.Rmd linguist-language=R
 **.bib linguist-language=R
+**.md linguist-language=R
