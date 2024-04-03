@@ -61,7 +61,7 @@ source("script/recode.R", local = knitr::knit_global())
 source("script/theme.R", local = knitr::knit_global())
 source("script/pretsanalysis.R", local = knitr::knit_global())
 source("script/ts.R", local = knitr::knit_global())
-source("script/distrib.R", local = knitr::knit_global())
+source("script/distribution.R", local = knitr::knit_global())
 source("script/numericdf.R", local = knitr::knit_global())
 source("script/correlation.R", local = knitr::knit_global())
 ```
@@ -162,7 +162,7 @@ Dalam konteks analisis menggunakan pemrograman R, menjaga replikabilitas hasil a
 
 1.  Script dan Kode Sumber: Semua langkah analisis, termasuk pemuatan data, pemrosesan, dan visualisasi, akan disusun dalam script R yang terdokumentasi dengan baik. Script ini akan mencakup semua langkah yang diperlukan untuk melakukan EDA secara lengkap.
 2.  Komentar dan Anotasi: Setiap bagian dari script akan diberi komentar dan anotasi yang jelas untuk menjelaskan tujuan, metode, dan interpretasi dari setiap langkah analisis. Hal ini akan memudahkan orang lain untuk memahami dan mereplikasi analisis.
-3.  Manajemen Versi: Script dan *source code* akan dikelola menggunakan sistem manajemen Git. Setiap perubahan yang dilakukan akan dicatat dengan jelas, dan versi yang stabil akan dikelola secara teratur.
+3.  Manajemen Versi: Script dan *source code* akan dikelola menggunakan sistem manajemen Git. Setiap perubahan yang dilakukan akan dicatat dengan jelas, dan versi yang stabil akan dikelola secara teratur. *Source code* tersimpan di <https://github.com/zata18/myeda>.
 4.  Dokumentasi Lengkap: Selain script R, akan disertakan dokumentasi lengkap yang menjelaskan proses EDA secara detail, termasuk konteks penelitian, sumber data, langkah-langkah analisis, dan temuan utama.
 5.  Penyimpanan Data yang Terkelola: Data konflik yang digunakan dalam analisis akan disimpan secara terkelola dan diarsipkan dengan baik. Ini akan memastikan bahwa data dapat diakses dan dianalisis kembali jika diperlukan di masa depan.
 
@@ -343,17 +343,13 @@ p_geo_adm + p_geo_fat
 Beberapa provinsi seperti Jakarta, East Java, dan South Sulawesi memiliki tingkat kepadatan konflik yang tinggi, sementara beberapa provinsi lain seperti Bangka-Belitung, Bengkulu, dan North Kalimantan memiliki kepadatan konflik yang relatif rendah. Terlepas dari kepadatan konflik, data korban jiwa juga menunjukkan variasi yang mencolok, dengan beberapa provinsi mencatatkan jumlah korban jiwa yang tinggi, sementara beberapa provinsi lain memiliki jumlah korban jiwa yang minim. Analisis ini memberikan gambaran tentang kompleksitas dinamika konflik dan dampaknya pada tingkat kerentanan masyarakat di berbagai wilayah. Grafik dalam Gambar \ref{fig:barevfat} menunjukkan bagaimana angka konflik dan korban jiwa tersebar di seluruh wilayah.
 
 ```{r barevfat, echo=FALSE, fig.cap='Jumlah Konflik dan Korban Jiwa pada Tiap Provinsi', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
-create.comp(ADMIN1_ABR)
+p_compare_reg
 ```
 
 Untuk memudahkan dalam interpretasi, data jumlah kasus konflik dan korban jiwa di berbagai wilayah dibagi menjadi tiga kelompok menggunakan algoritma *K-means clustering* (Gambar \ref{fig:cluster}) . Untuk kasus konflik, kelompok pertama memiliki rata-rata kasus tertinggi sebesar 1.586,67 (3 wilayah), diikuti oleh kelompok kedua dengan rata-rata 700,83 (6 wilayah), dan kelompok ketiga dengan rata-rata 196.28 (29 wilayah). Sedangkan untuk korban jiwa, kelompok pertama memiliki rata-rata korban tertinggi sebesar 257.33 (3 wilayah), diikuti oleh kelompok kedua dengan rata-rata 49.20 (5 wilayah), dan kelompok ketiga dengan rata-rata 8.03 (30 wilayah).
 
 ```{r cluster, echo=FALSE, fig.cap='Klusterisasi Wilayah berdasarkan Konflik dan Korban Jiwa', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
-p_cluster +
-  plot_annotation(
-    caption = 'Square root scaled bar',
-    theme = theme(plot.title = element_text(size = 9))
-  )
+p_clust_evnfat
 ```
 
 Kelompok pertama merupakan kelompok dengan jumlah kasus konflik paling tinggi. Jakarta memiliki jumlah kasus tertinggi sebesar 1822 (12.43%), diikuti oleh Jawa Timur (1515, 10.37%) dan Jawa Barat (1423, 9.71%). Kelompok kedua, yang memiliki aktivitas konflik menengah, terdiri dari provinsi seperti Sulawesi Selatan (941, 6.42%), Jawa Tengah (813, 5.55%), dan Sumatra Utara (763, 5.21%). Sementara itu, provinsi seperti Papua (394, 2.69%) dan Banten (139, 2.37%) berada dalam kelompok ketiga beserta provinsi-provinsi lainnya, memiliki jumlah kasus konflik paling rendah.
@@ -394,7 +390,6 @@ pden2d
 Selanjutnya, ditinjau dari tingkat administratif 2 (Kabupaten/Kota) dan 3 (Kecamatan), Gambar \ref{fig:adm23} menunjukkan bahwa untuk tingkat daerah administratif 2 seperti Jakarta Pusat, Jakarta Selatan, dan Makassar merupakan tiga wilayah kota/kabupaten administratif dengan total jumlah konflik tertinggi, masing-masing dengan 1085, 457, dan 421. Di sisi lain, untuk wilayah kecamatan yang lebih spesifik di tingkat lokal, daerah Gambir, Mampang Prapatan, dan Medan Baru sebagai tiga wilayah teratas, memiliki jumlah frekuensi berturut-turut sebesar 1085, 457, dan 416. Analisis data korban jiwa pada tingkat administratif yang sama menunjukkan pola yang menarik. Malang, Nduga, dan Puncak adalah tiga wilayah dengan jumlah korban jiwa tertinggi, dengan masing-masing mencapai 137, 122, dan 92. Sementara itu, data juga menyoroti tingkat korban jiwa di tingkat kecamatan, dengan Klojen, Kenyam, dan Dekai menjadi tiga wilayah teratas, memiliki jumlah kematian berturut-turut sebesar 135, 60, dan 58.
 
 ```{r adm23, echo=FALSE, fig.align='left', fig.cap="Sebaran Konflik dan  Korban Jiwa pada Level Kabupaten/Kota dan Kecamatan (7 Besar)", fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE}
-# p_adm_evt_fat
 p_adm_evt_fat
 ```
 
@@ -427,6 +422,10 @@ p_evt_adm1_prc
 ```
 
 Selanjutnya, kita telaah distribusi dan pola kejadian konflik berdasarkan subjenisnya melalui grafik dalam Gambar \ref{fig:subtype} di bawah. Berdasarkan grafik ini, ditemukan bahwa subtipe *Peaceful protest* adalah yang paling umum dalam kategori *Protests,* sementara *Armed clash* adalah yang paling umum dalam kategori *Battles*. Selain itu, subtipe *Looting/property destruction* menjadi yang paling umum dalam kategori *Strategic developments*, dan *Attack* menjadi yang paling umum dalam kategori *Violence against civilians.*
+
+```{r echo=FALSE, fig.cap='Pola Distribusi Konflik pada Tiap Wilayah Sepanjang Waktu Pengamatan', fig.dpi=300, fig.height=3.2, fig.width=7.48}
+p_con_ym
+```
 
 ```{r subtype, echo=FALSE, fig.cap='Frekuensi Subjenis Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
 p_subtype

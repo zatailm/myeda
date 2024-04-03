@@ -1,8 +1,8 @@
 ##----------------------------------------------------------------------------------- MORAN
 
 ## Permutasi moran
-spatial.moran.mc <- function(data, variable, data_geo) {
-  nb <- poly2nb(data_geo, queen = T)
+spatial.moran.mc <- function(data, variable) {
+  nb <- poly2nb(data, queen = T)
   lw <- nb2listw(nb, style = "W", zero.policy = T)
   
   moran_test <- moran.test(data[[variable]], listw = lw)
@@ -15,8 +15,10 @@ spatial.moran.mc <- function(data, variable, data_geo) {
   return(list(result = result, nb = nb, lw = lw))
 }
 
-result_evt <- spatial.moran.mc(df_geo_adm, "n", df_geo_adm)
-result_fat <- spatial.moran.mc(df_geo_fat, "n", df_geo_fat)
+df_f_mod <- df_prv_geo %>% filter(TYPE == 'FATALITIES') %>% mutate(n = replace(n, is.na(n), 0))
+
+result_evt <- spatial.moran.mc(df_e, "n")
+result_fat <- spatial.moran.mc(df_f_mod, "n")
 
 x_evt <- seq(-.4, .6, by = .2)
 x_fat <- c(-.25, 0, .25, .5, .75)
@@ -79,9 +81,9 @@ plot.moran <- function(df_spatial, variable, listw, title) {
   return(p)
 }
 
-# df_geo_adm dan df_geo_fat didefinisikan di distrib.R
-p_mpe <- plot.moran(df_geo_adm, "n", result_evt$lw, "Events")
-p_mpf <- plot.moran(df_geo_fat, "n", result_fat$lw, "Fatalities")
+# df_e dan df_f sebagai dasar df_f_mod didefinisikan di distribution
+p_mpe <- plot.moran(df_e, "n", result_evt$lw, "Events")
+p_mpf <- plot.moran(df_f_mod, "n", result_fat$lw, "Fatalities")
 p_moranp <- p_mpe + space + p_mpf + layw2
 
 ##----------------------------------------------------------------------------------- JENIS KONFLIK

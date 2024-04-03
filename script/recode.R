@@ -95,4 +95,5 @@ acled <- acled %>%
          FATALITIES = as.integer(FATALITIES)) %>%
   mutate(CMONTH = (year(ymd(EVENT_DATE)) - min(year(ymd(EVENT_DATE)))) * 12 + 
            month(ymd(EVENT_DATE)) - min(month(ymd(EVENT_DATE))) + 1) %>%
-  mutate(ADMINID = recode(as.character(ADMIN1), !!!adm_id))
+  mutate(ADMINID = recode(as.character(ADMIN1), !!!adm_id)) %>%
+  mutate(MONTH = month(EVENT_DATE))
