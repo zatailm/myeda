@@ -7,7 +7,7 @@ df_fat <- acled %>% group_by(ADMIN1) %>% summarize(n = sum(FATALITIES)) %>%
 df_prv <- rbind(df_adm_n, df_fat)
 df_prv_geo <- prvnc %>% left_join(df_prv, by = c('PROVINSI' = 'ADMIN1'))
 
-create_plot <- function(data, title, fill_col, breaks, labels, option) {
+map.plot <- function(data, title, fill_col, breaks, labels, option) {
   ggplot() +
     geom_sf(data = data, aes(fill = n), lwd = NA) +
     scale_fill_viridis_c(
@@ -31,9 +31,9 @@ df_geo_adm <- df_geo_adm[, c('PROVINSI', 'n', 'geometry')]
 df_geo_fat <- df_prv_geo %>% filter(TYPES == "FATALITIES")
 df_geo_fat <- df_geo_fat[, c('PROVINSI', 'n', 'geometry')]
 
-p_geo_adm <- create_plot(df_geo_adm, "Event", "", c(min(df_geo_adm$n), max(df_geo_adm$n)), 
+p_geo_adm <- map.plot(df_geo_adm, "Event", "", c(min(df_geo_adm$n), max(df_geo_adm$n)), 
                          c(min(df_geo_adm$n), max(df_geo_adm$n)), "D")
-p_geo_fat <- create_plot(df_geo_fat, "Fatalities", "", c(2, 320), c(2, 320), "C")
+p_geo_fat <- map.plot(df_geo_fat, "Fatalities", "", c(2, 320), c(2, 320), "C")
 
 ## bar
 
@@ -52,14 +52,14 @@ df_evt_adm_all <- acled %>% group_by(ADMIN1_ABR, ADMINID) %>% count(ADMIN1_ABR)
 df_fat_adm_all <- acled %>% group_by(ADMIN1_ABR, ADMINID) %>% 
   summarize(n = sum(FATALITIES), .groups = 'drop') %>% arrange(desc(n)) %>% ungroup()
 df_adm_evt_fat <- left_join(df_evt_adm_all, df_fat_adm_all, by = c("ADMIN1_ABR", "ADMINID")) %>%
-  rename(Event = n.x, Fatalities = n.y)
+  rename(Events = n.x, Fatalities = n.y)
 
-create.comp <- function(prv, abr = TRUE) {
+com.plot <- function(prv, abr = TRUE) {
   p <- df_adm_evt_fat %>%
     ggplot(aes(x = {{prv}})) +
-    geom_col(aes(y = sqrt(Event), fill = 'Events'), position = 'identity', width = .6) +
+    geom_col(aes(y = sqrt(Events), fill = 'Events'), position = 'identity', width = .6) +
     geom_col(aes(y = -sqrt(Fatalities), fill = 'Fatalities'), position = 'identity', width = .6) +
-    geom_text(aes(y = sqrt(Event) + .1, label = Event), position = 'identity',
+    geom_text(aes(y = sqrt(Events) + .1, label = Events), position = 'identity',
               size = 2.5, hjust = -.3, vjust = .35, angle = 90) +
     geom_text(aes(y = -sqrt(Fatalities) - .1, label = Fatalities), position = 'identity',
               size = 2.5, hjust = 1.3, vjust = .35, angle = 90) +
@@ -213,12 +213,13 @@ create.heatmap <- function(data, event = TRUE) {
     geom_tile(mapping = aes(fill = n), color = '#000000', linewidth = .25) +
     scale_x_continuous(breaks = seq(2, 108, 108/36), expand = c(0, 0)) +
     theme(legend.position = 'top', legend.justification = 'right', 
-          axis.title.x = element_blank(), legend.key.height = unit(0.15, "cm"),
+          legend.key.height = unit(0.15, "cm"),
           legend.key.width = unit(1, "cm"), legend.title = element_text(size = 6),
           legend.text = element_text(size = 6), legend.ticks = element_blank(),
           panel.border = element_blank(), axis.text = element_text(size = 6),
           axis.ticks.length = unit(1, 'mm')) +
-    scale_y_discrete(name = NULL, position = "right")
+    scale_y_discrete(name = NULL, position = "right") +
+    labs(x = 'Number of Month (Continuous)')
   
   if (event) {
     p <- p + 
@@ -354,13 +355,31 @@ p_evt_adm1_prc <- df_evttype_adm1 %>%
   scale_fill_zata() + labs(x = 'Province (Abbreviation)', y = NULL) +
   guides(fill = guide_legend(nrow = 1, title = NULL, title.theme = element_text(size = 8)))
 
+df_con_ym <- acled %>% 
+  group_by(YEAR, MONTH, EVENT_TYPE_SRT, .drop = TRUE) %>%
+  summarise(freq = n(), .groups = 'drop_last') %>%
+  rename(year = YEAR, month = MONTH, event = EVENT_TYPE_SRT)
+
+p_con_ym <- df_con_ym %>%
+  ggplot(aes(x = month, y = freq, fill = event)) +
+  # geom_bar(stat = 'identity', aes(fill = event)) +
+  geom_col(position = 'fill', width = .6) +
+  scale_x_continuous(breaks = seq(1, 12, 1), expand = expansion(mult = c(.02, .02))) +
+  scale_y_continuous(
+    breaks = seq(.0, 1, .5),
+    expand = expansion(mult = c(.05, .05))) +
+  scale_fill_zata() +
+  # theme(axis.text.x = element_text(vjust = .4), axis.title = element_blank()) +
+  guides(fill = guide_legend(nrow = 1)) +
+  facet_wrap(~year, nrow = 3, ncol = 3) +
+  labs(x = "Number of Month", y = "Proportion", fill = NULL)
+
+
 # admin event and fatalities rank per type
 etypes <- c(l$bat, l$ervl, l$prt, l$rts, l$devl, l$vacl)
-
 scan.evn <- function(x) {
   acled %>% filter(EVENT_TYPE == {{ x }}) %>%  count(ADMINID, sort = TRUE) %>% 
     rename(total = n) %>% top_n(5, wt = total) %>% arrange(desc(total))}
-
 ls.evn.adm <- lapply(etypes, function(etypes) {
   scan.evn(etypes) %>% mutate(type = etypes)})
 
@@ -610,7 +629,6 @@ create.plactr <- function(df, opt, tit) {
 
 p_actor <- create.plactr(df_act, 'D', 'Actor Occurance')
 p_actor_fat <- create.plactr(df_cas_act, 'C', 'Actors Contributions to Fatalities')
-
 p_actor <- p_actor + space + p_actor_fat + layw2
 
 
