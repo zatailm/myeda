@@ -336,6 +336,10 @@ Berdasarkan temuan-temuan di ats, model Auto ARIMA (Gambar \ref{fig:forcst}) tam
 
 Hasil analisis distribusi konflik mengungkapkan pola sebaran geografis kejadian konflik di Indonesia. Peta heatmap menyoroti wilayah-wilayah dengan tingkat kejadian konflik yang tinggi. Temuan ini memberikan pemahaman visual tentang area-area kepadatan konflik di Indonesia (Gambat \ref{fig:mapevfat}).
 
+```{r locmap, echo=FALSE, fig.cap='Titik Koordinat Konflik', fig.dpi=300, fig.height=2, fig.width=7.48, message=FALSE, warning=FALSE}
+p_loc_map
+```
+
 ```{r mapevfat, echo=FALSE, fig.cap='Peta Kepadatan Komflik dan Korban Jiwa', fig.dpi=300, fig.height=2, fig.width=7.48, message=FALSE, warning=FALSE}
 p_geo_adm + p_geo_fat
 ```
@@ -372,9 +376,9 @@ Meningkatnya frekuensi konflik dan terjadi secara bersamaan di sebagian besar wi
 
 ```{r wcdist, fig.cap='Catatan untuk bulan September 2019 (kiri), Oktober 2020 (tengah), dan September 2022', echo=FALSE, fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE, fig.align='center'}
 par(mfrow = c(1,3), oma = c(0,0,0,0), mar = c(0,0,0,0))
-create.wc(57, 30)
-create.wc(70, 50)
-create.wc(93, 50)
+create.wc(acled, CMONTH, 57, NOTES, 30)
+create.wc(acled, CMONTH, 70, NOTES, 50)
+create.wc(acled, CMONTH, 93, NOTES, 50)
 ```
 
 ```{r htfat, echo=FALSE, fig.align='left', fig.cap='Heatmap Korban Jiwa tiap Wilayah', fig.dpi=300, fig.height=3.66, fig.width=7.48, warning=FALSE}
@@ -404,6 +408,10 @@ p_typ
 ```
 
 Peta choropleth di bawah (Gambar \ref{fig:maptype}) memberikan gambawan visual tentang distribusi spasial kepadatan konflik di Indonesia. Wilayah yang berwarna gelap menunjukkan tingkat kepadatan konflik yang tinggi, sedangkan wilayah yang berwarna terang menunjukkan tingkat kepadatan yang rendah. *Protests* adalah jenis konflik memiliki kepadatan paling tinggi di bandingkan dengan jenis lain. *Protests* bersama *riots* dan *violence against civilians* adalah jenis konflik yang memiliki persebaran yang merata di seluruh wilayah. Sementara itu, *Battles* dan *strategic developments* hanya menyisakan beberapa wilayah yang tidak terdampak, serta *explosions/remote violence* hanya terjadi di beberapa wilayah saja.
+
+```{r loctype, echo=FALSE, fig.cap='Peta Distribusi Koflik berdasarkan Jenis', fig.dpi=300, fig.height=2.3, fig.width=7.48, message=FALSE, warning=FALSE}
+p_loc_map_type
+```
 
 ```{r maptype, echo=FALSE, fig.cap='Peta Distribusi Koflik berdasarkan Jenis', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
 p_cho_adm_evn
@@ -447,6 +455,24 @@ pfat_adm
 
 ```{r jittype, echo=FALSE, fig.cap='Distribusi Titik-titik Jenis Konflik di Seluruh Wilayah', fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE}
 p_dis_evn
+```
+
+```{r heattype, echo=FALSE, fig.cap='Distribusi Titik-titik Jenis Konflik di Seluruh Wilayah', fig.dpi=300, fig.height=1.2, fig.width=7.48, message=FALSE, warning=FALSE}
+p_heat_typ
+```
+
+```{r heattypefat, echo=FALSE, fig.cap='Distribusi Korban Jiwa per Bulan', fig.dpi=300, fig.height=1.2, fig.width=7.48, message=FALSE, warning=FALSE}
+p_heat_typ_fat
+```
+
+```{r wctype, fig.cap='Wordcloud Berdasarkan Jenis Konflik', echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.48, fig.height=3.6}
+par(mfrow = c(2,3), oma = c(0,0,0,0), mar = c(0,0,0,0))
+create.wc(acled, EVENT_TYPE_SRT, 'Battles', NOTES, 30)
+create.wc(acled, EVENT_TYPE_SRT, 'ERV', NOTES, 1)
+create.wc(acled, EVENT_TYPE_SRT, 'Protests', NOTES, 400)
+create.wc(acled, EVENT_TYPE_SRT, 'Riots', NOTES, 100)
+create.wc(acled, EVENT_TYPE_SRT, 'Str.Dev.', NOTES, 1500)
+create.wc(acled, EVENT_TYPE_SRT, 'VAC', NOTES, 30)
 ```
 
 ### Aktor
