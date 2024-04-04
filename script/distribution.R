@@ -49,7 +49,27 @@ compare <- function(data, clean = TRUE) {
 p_raw <- compare(do.scan(dataraw), clean = FALSE)
 p_clean <- compare(do.scan(acled))
 
-# map plot ------------------------------------------------------------------------------------
+# location map --------------------------------------------------------------------------------
+
+map.loc <- function(layera, layerb, show_legend = TRUE, wrap = FALSE) {
+  p <- ggplot() +
+    geom_sf(data = layera) + 
+    geom_sf(data = layerb, aes(color = EVENT_TYPE), size = 1.5, alpha = 0.2, show.legend = show_legend) + 
+    theme_void() +
+    theme(legend.position = ifelse(show_legend, 'right', 'none')) +
+    scale_color_manual(name = "Event Type", values = pal.zata)
+  if (wrap) {
+    p <- p + facet_wrap(~EVENT_TYPE, ncol = 3)
+  }
+  return(p)
+}
+
+sf_data <- st_as_sf(acled, coords = c("LONGITUDE", "LATITUDE"), crs = 4326)
+
+p_loc_map <- map.loc(prvnc, sf_data, show_legend = TRUE, wrap = FALSE)
+p_loc_map_type <- map.loc(prvnc, sf_data, show_legend = FALSE, wrap = TRUE) 
+
+# choropleth events and fatalities ------------------------------------------------------------
 
 map.plot <- function(data, title, breaks, labels, option) {
   ggplot() +
@@ -94,7 +114,7 @@ p_geo_adm <- map.plot(
 
 p_geo_fat <- map.plot(
   data = df_f, 
-  title = "Event", 
+  title = "Fatalities", 
   breaks = na.omit(c(min(df_f$n, na.rm = T), max(df_f$n, na.rm = T))), 
   labels = na.omit(c(min(df_f$n, na.rm = T), max(df_f$n, na.rm = T))), 
   option = "C")
@@ -233,7 +253,7 @@ create.heatmap <- function(data, datx, daty, n, event = TRUE) {
   p <- data %>%
     ggplot(aes(x = {{datx}}, y = reorder({{daty}}, {{n}}))) +
     geom_tile(mapping = aes(fill = n), color = '#000000', linewidth = .25) +
-    scale_x_continuous(breaks = seq(2, 108, 108/36), expand = c(0, 0)) +
+    scale_x_continuous(breaks = seq(0, 108, 4), expand = c(0, 0)) +
     theme(legend.position = 'top', legend.justification = 'right', 
           legend.key.height = unit(0.15, "cm"),
           legend.key.width = unit(1, "cm"), legend.title = element_text(size = 6),
@@ -274,8 +294,20 @@ df_heat_adm_fat <- acled %>%
   complete(CMONTH = 1:108) %>%
   replace_na(list(n = 0))
 
+df_heat_evn_typ <- acled %>%
+  count(EVENT_TYPE_SRT, CMONTH) %>%
+  complete(EVENT_TYPE_SRT, CMONTH, fill = list(n = 0))
+
+df_heat_typ_fat <- acled %>%
+  group_by(EVENT_TYPE_SRT, CMONTH) %>%
+  summarise(n = sum(FATALITIES), .groups = 'drop_last') %>%
+  complete(CMONTH = 1:108) %>%
+  replace_na(list(n = 0))
+
 p_heat_evn <- create.heatmap(df_heat_adm_evn, CMONTH, ADMIN1_ABR, n, event = TRUE)
 p_heat_fat <- create.heatmap(df_heat_adm_fat, CMONTH, ADMIN1_ABR, n, event = FALSE)
+p_heat_typ <- create.heatmap(df_heat_evn_typ, CMONTH, EVENT_TYPE_SRT, n, event = TRUE)
+p_heat_typ_fat <- create.heatmap(df_heat_typ_fat, CMONTH, EVENT_TYPE_SRT, n, event = FALSE)
 
 # admin2 and admin3 events - fatalities -------------------------------------------------------
 
@@ -366,6 +398,7 @@ p_con_ym <- df_con_ym %>%
     expand = expansion(mult = c(.05, .05))) +
   scale_fill_zata() +
   guides(fill = guide_legend(nrow = 1)) +
+  theme(panel.border = element_blank()) +
   facet_wrap(~year, nrow = 3, ncol = 3) +
   labs(x = "Number of Month", y = "Proportion", fill = NULL)
 
@@ -570,7 +603,6 @@ p_subtype <- dfsubtype %>%
   theme(legend.position = 'right', panel.border = element_blank(), 
         panel.grid.major.y = element_blank(), axis.text.y = element_blank(),
         axis.ticks.y = element_blank(), axis.title.y = element_blank(),
-        # axis.text.x = element_text(angle = -25, vjust = 1, hjust = 0, size = 7),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = .2),
         plot.margin = unit(c(0,60,0,60), 'pt')) +
   guides(fill = guide_legend(title = "Event Types", size = 5)) + 
@@ -647,15 +679,13 @@ p_actor <- p_actor + space + p_actor_fat + layw2
 
 stop.words <- c(
   stopwords('en'),
-  'january', 'february', 'march', 'april', 'may', 'june', 'july',
-  'august', 'september', 'october', 'november', 'december',
   'province', 'held', 'city', 'district', 'regency', 'north',
   'west', 'south', 'east', 'front'
 )
 
-create.wc <- function(month, min) {
-  note <- acled %>% filter(CMONTH == month) %>% dplyr::select(NOTES)
-  text <- paste(note, colapse = " ")
+create.wc <- function(data, var, month, notes, min) {
+  note <- data %>% filter({{var}} == month) %>% dplyr::select({{notes}})
+  text <- paste(note, collapse = " ")
   corpus <- Corpus(VectorSource(text))
   corpus <- tm_map(corpus, content_transformer(tolower))
   corpus <- tm_map(corpus, removePunctuation)
@@ -664,7 +694,17 @@ create.wc <- function(month, min) {
   tdm <- TermDocumentMatrix(corpus)
   m <- as.matrix(tdm)
   word_freqs <- sort(rowSums(m), decreasing = TRUE)
+  set.seed(1234)
   wordcloud(words = names(word_freqs), freq = word_freqs, min.freq = min,
             max.words = max(word_freqs), random.order = FALSE, colors = brewer.pal(8, "Dark2"), 
             rot.per = .35, scale = c(2, .4))
 }
+
+# NOTE : 
+# 1. wordcloud called directly inside Rmd using this example:
+# create.wc(acled, CMONTH, 57, NOTES, 30) or create.wc(acled, EVENT_TYPE_SRT, 'Battles', NOTES, 30)
+# To assign it as variable, use 'myvariable <- recordPlot()' after calling create.wc()
+# 2. be careful in determining stopwords!
+# 3. add this to access some parameters:
+# p <- recordPlot()
+# return(list(plot = p, tdm = tdm, freqs = as.data.frame(word_freqs)))
