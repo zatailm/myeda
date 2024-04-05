@@ -699,8 +699,6 @@ create.wc <- function(data, var, item, notes, min) {
   wordcloud(words = names(word_freqs), freq = word_freqs, min.freq = min,
             max.words = max(word_freqs), random.order = FALSE, colors = brewer.pal(8, "Dark2"), 
             rot.per = .35, scale = c(2, .4))
-  p <- recordPlot()
-  return(list(plot = p, data = m))
 }
 
 # NOTE : 
