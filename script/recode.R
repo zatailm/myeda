@@ -10,7 +10,7 @@ prvnc <- st_as_sf(idn1)
 inter <- c(
   '1' = 'State Forces', '2' = 'Rebel Groups', 
   '3' = 'Political Militias', '4' = 'Identity Militias', '5' = 'Rioters',
-  '6' = 'Protesters', '7' = 'Civilians', '8' = 'External/Other Forces')
+  '6' = 'Protesters', '7' = 'Civilians', '8' = 'Other Forces')
 interaction <- c(
   '10' = 'Sole State Forces Action', '11' = 'State Forces Vs State Forces',
   '12' = 'State Forces Vs Rebels', '13' = 'State Forces Vs Political Militia',
@@ -87,7 +87,9 @@ acled <- acled %>%
   mutate(across(c(ADMIN2, ADMIN3, ACTOR2), ~ ifelse(is.na(.), NA, .))) %>%
   mutate(across(c(INTER1, INTER2), ~ ifelse(. == 0, NA, as.character(.)))) %>%
   mutate(across(c(ACTOR1, ACTOR2), ~ str_replace_all(., ' \\s*\\([^\\)]+\\)', ''))) %>%
-  mutate(across(c(INTER1, INTER2), ~ recode(as.character(.), !!!inter))) %>%
+  # mutate(across(c(INTER1, INTER2), ~ recode(as.character(.), !!!inter))) %>%
+  mutate(ACT1 = recode(as.character(INTER1), !!!inter)) %>%
+  mutate(ACT2 = recode(as.character(INTER2), !!!inter)) %>%
   mutate(INTERACTION = recode(as.character(INTERACTION), !!!interaction)) %>%
   mutate(ADMIN1_ABR = recode(as.character(ADMIN1), !!!adm_abr)) %>%
   mutate(EVENT_TYPE_SRT = recode(as.character(EVENT_TYPE), !!!evt_abr)) %>%

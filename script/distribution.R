@@ -207,7 +207,8 @@ p_clust_evnfat <- p_compare_clust +
 scat.plot <- function(data, geom = "jitter", method = "density", axis_text = TRUE) {
   if (geom == "jitter") {
     p <- ggplot(data, aes(x = factor(ADMIN1_ABR), y = EVENT_DATE)) +
-      geom_jitter(aes(color = ADMIN1_ABR, fill = ADMIN1_ABR), size = .3, pch = 20)
+      geom_jitter(aes(color = ADMIN1_ABR, fill = ADMIN1_ABR), pch = 20,
+                  position = position_jitter(0.2), cex = 1.2)
   } else if (geom == "sina") {
     if (method == "density") {
       p <- ggplot(data, aes(x = factor(ADMIN1_ABR), y = EVENT_DATE)) +
@@ -675,7 +676,7 @@ p_actor <- create.plactr(df_act, actors, total, 'D', 'Actor Occurance')
 p_actor_fat <- create.plactr(df_cas_act, actors, total, 'C', 'Actors Contributions to Fatalities')
 p_actor <- p_actor + space + p_actor_fat + layw2
 
-# wordcloud -----------------------------------------------------------------------------------
+# wordcloud: filtered -------------------------------------------------------------------------
 
 stop.words <- c(
   stopwords('en'),
@@ -683,8 +684,8 @@ stop.words <- c(
   'west', 'south', 'east', 'front'
 )
 
-create.wc <- function(data, var, month, notes, min) {
-  note <- data %>% filter({{var}} == month) %>% dplyr::select({{notes}})
+create.wc <- function(data, var, item, notes, min) {
+  note <- data %>% filter({{var}} == item) %>% dplyr::select({{notes}})
   text <- paste(note, collapse = " ")
   corpus <- Corpus(VectorSource(text))
   corpus <- tm_map(corpus, content_transformer(tolower))
@@ -698,6 +699,8 @@ create.wc <- function(data, var, month, notes, min) {
   wordcloud(words = names(word_freqs), freq = word_freqs, min.freq = min,
             max.words = max(word_freqs), random.order = FALSE, colors = brewer.pal(8, "Dark2"), 
             rot.per = .35, scale = c(2, .4))
+  p <- recordPlot()
+  return(list(plot = p, data = m))
 }
 
 # NOTE : 
@@ -708,3 +711,61 @@ create.wc <- function(data, var, month, notes, min) {
 # 3. add this to access some parameters:
 # p <- recordPlot()
 # return(list(plot = p, tdm = tdm, freqs = as.data.frame(word_freqs)))
+
+# wordcloud: comparison and commonality -------------------------------------------------------
+
+labels <- c("Battles", "ERV", "Protests", "Riots", "Str.Dev.", "VAC")
+
+notes_list <- lapply(labels, function(x) {
+  acled %>%
+    filter(EVENT_TYPE_SRT == x) %>%
+    dplyr::select(NOTES) %>%
+    mutate(labels = x)
+})
+
+dataset.corpus <- lapply(notes_list, function(x) VCorpus(VectorSource(toString(x))))
+dataset.corpus.all <- dataset.corpus[[1]]
+for (i in 2:length(labels)) {dataset.corpus.all <- c(dataset.corpus.all, dataset.corpus[[i]])}
+
+dataset.corpus.all <- tm_map(dataset.corpus.all, content_transformer(tolower))
+dataset.corpus.all <- tm_map(dataset.corpus.all, removePunctuation)
+dataset.corpus.all <- tm_map(dataset.corpus.all, removeNumbers)
+dataset.corpus.all <- tm_map(dataset.corpus.all, function(x) removeWords(x, stopwords('english')))
+
+document.tm <- TermDocumentMatrix(dataset.corpus.all)
+document.tm.mat <- as.matrix(document.tm)
+colnames(document.tm.mat) <- labels
+document.tm.clean <- removeSparseTerms(document.tm, 0.8)
+document.tm.clean.mat <- as.matrix(document.tm.clean)
+colnames(document.tm.clean.mat) <- labels
+
+index <- as.logical(sapply(rownames(document.tm.clean.mat), function(x) (nchar(x)>3) ))
+document.tm.clean.mat.s <- document.tm.clean.mat[index,]
+
+# head(document.tm.clean.mat.s)
+# comparison.cloud(document.tm.clean.mat.s, min.words = 1, random.order = FALSE, c(4, .4), title.size = 1.4)
+# commonality.cloud(document.tm.clean.mat.s, min.words=1, random.order=FALSE)
+
+# alluvial actors -----------------------------------------------------------------------------
+
+data_filtered <- acled %>%
+  dplyr::select(ACT1, ACT2) %>%
+  na.omit() 
+
+data_count <- data_filtered %>%
+  group_by(ACT1, ACT2) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  arrange(desc(count)) %>%
+  rename(ACTOR1 = ACT1, ACTOR2 = ACT2)
+
+p_alluvial <- ggplot(data_count, aes(axis1 = ACTOR1, axis2 = ACTOR2, y = log(count))) +
+  geom_alluvium(aes(fill = ACTOR1)) +
+  geom_stratum() +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 2, angle = 90) +
+  scale_x_discrete(limits = c('ACTOR1', 'ACTOR2'), expand = c(0.15, 0.05)) +
+  scale_fill_zata() +
+  theme(plot.margin = unit(c(0,0,0,0), 'pt'), panel.border = element_blank(), 
+        panel.grid.major = element_blank(), axis.text.x = element_blank(), 
+        axis.ticks = element_blank(), axis.title = element_blank(),
+        legend.position = 'none') +
+  coord_flip()
