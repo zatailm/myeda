@@ -678,26 +678,30 @@ p_actor <- p_actor + space + p_actor_fat + layw2
 
 # wordcloud: filtered -------------------------------------------------------------------------
 
-stop.words <- c(
-  stopwords('en'),
-  'province', 'held', 'city', 'district', 'regency', 'north',
-  'west', 'south', 'east', 'front'
-)
+stop.words <- stopwords('en')
 
-create.wc <- function(data, var, item, notes, min) {
-  note <- data %>% filter({{var}} == item) %>% dplyr::select({{notes}})
+create.wc <- function(
+    data = '', 
+    src.in = '', 
+    src = '', 
+    words = '', 
+    rem.words = stop.words, 
+    min = '',
+    max = ''
+) {
+  note <- data %>% filter({{src.in}} == src) %>% dplyr::select({{words}})
   text <- paste(note, collapse = " ")
   corpus <- Corpus(VectorSource(text))
   corpus <- tm_map(corpus, content_transformer(tolower))
   corpus <- tm_map(corpus, removePunctuation)
   corpus <- tm_map(corpus, removeNumbers)
-  corpus <- tm_map(corpus, removeWords, stop.words)
+  corpus <- tm_map(corpus, removeWords, rem.words)
   tdm <- TermDocumentMatrix(corpus)
   m <- as.matrix(tdm)
   word_freqs <- sort(rowSums(m), decreasing = TRUE)
   set.seed(1234)
   wordcloud(words = names(word_freqs), freq = word_freqs, min.freq = min,
-            max.words = max(word_freqs), random.order = FALSE, colors = brewer.pal(8, "Dark2"), 
+            max.words = max, random.order = FALSE, colors = brewer.pal(8, "Dark2"), 
             rot.per = .35, scale = c(2, .4))
 }
 

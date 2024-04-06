@@ -6,6 +6,16 @@ layout(mat = layout_matrix,
        widths = c(3, 3, 3))     # Widths of the three columns
 
 # layout.show(12)
+
+rem_this <- c(
+  stopwords('en'),
+  'province', 'district', 'city', 'village', 'held',
+  'north', 'east', 'south', 'west', 'regency',
+  'front', 'one', 'two', 'three', 'four', 'five',
+  'six', 'seven', 'eight', 'nine', 'ten', 'many',
+  'thousands', 'hundreds', 'may', 'coded', 'arounds'
+)
+
 par(mar=rep(0, 4))
 plot.new()
 text(x = 0.5, y = 0.5, "Battles")
@@ -16,9 +26,33 @@ par(mar=rep(0, 4))
 plot.new()
 text(x = 0.5, y = 0.5, "Protests")
 
-create.wc(acled, EVENT_TYPE_SRT, 'Battles', NOTES, 50)
-create.wc(acled, EVENT_TYPE_SRT, 'ERV', NOTES, 1)
-create.wc(acled, EVENT_TYPE_SRT, 'Protests', NOTES, 800)
+create.wc(
+  data = acled,
+  src.in = EVENT_TYPE_SRT,
+  src = 'Battles',
+  words = NOTES,
+  rem.words = rem_this,
+  min = 50,
+  max = 2000
+)
+create.wc(
+  data = acled,
+  src.in = EVENT_TYPE_SRT,
+  src = 'ERV',
+  words = NOTES,
+  rem.words = rem_this,
+  min = 5,
+  max = 30
+)
+create.wc(
+  data = acled,
+  src.in = EVENT_TYPE_SRT,
+  src = 'Protests',
+  words = NOTES,
+  rem.words = rem_this,
+  min = 800,
+  max = 5000
+)
 
 par(mar=rep(0, 4))
 plot.new()
@@ -30,6 +64,30 @@ par(mar=rep(0, 4))
 plot.new()
 text(x = 0.5, y = 0.5, "VAC")
 
-create.wc(acled, EVENT_TYPE_SRT, 'Riots', NOTES, 200)
-create.wc(acled, EVENT_TYPE_SRT, 'Str.Dev.', NOTES, 50)
-create.wc(acled, EVENT_TYPE_SRT, 'VAC', NOTES, 80)
+create.wc(
+  data = acled,
+  src.in = EVENT_TYPE_SRT,
+  src = 'Riots',
+  words = NOTES,
+  rem.words = rem_this,
+  min = 200,
+  max = 2000
+)
+create.wc(
+  data = acled,
+  src.in = EVENT_TYPE_SRT,
+  src = 'Str.Dev.',
+  words = NOTES,
+  rem.words = rem_this,
+  min = 50,
+  max = 2000
+)
+create.wc(
+  data = acled,
+  src.in = EVENT_TYPE_SRT,
+  src = 'VAC',
+  words = NOTES,
+  rem.words = rem_this,
+  min = 80,
+  max = 2000
+)
