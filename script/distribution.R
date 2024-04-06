@@ -403,6 +403,40 @@ p_con_ym <- df_con_ym %>%
   facet_wrap(~year, nrow = 3, ncol = 3) +
   labs(x = "Number of Month", y = "Proportion", fill = NULL)
 
+# yearly aggregated event type amount ---------------------------------------------------------
+
+df_con_y_raw <- acled %>% 
+  group_by(YEAR, EVENT_TYPE_SRT, .drop = TRUE) %>%
+  summarise(total = n(), .groups = 'drop_last') %>%
+  rename(year = YEAR, event = EVENT_TYPE_SRT)
+
+all_combinations <- expand.grid(year = unique(df_con_y_raw$year), event = unique(df_con_y_raw$event))
+
+df_con_y <- all_combinations %>%
+  left_join(df_con_y_raw, by = c("year", "event")) %>%
+  mutate(total = replace(total, is.na(total), 0))
+
+p_con_y <- df_con_y %>%
+  ggplot(aes(x = factor(year), total)) +
+  geom_bar(stat = 'identity', aes(fill = event), width = .5) +
+  geom_text(
+    stat = 'summary',
+    aes(angle = 90, label = after_stat(y), group = year),
+    fun = sum, vjust = .3, hjust = -.5, size = 2.3
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(.02, .8))) +
+  scale_fill_zata() +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = .4, size = 7),
+    legend.position = 'none',
+    panel.border = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    panel.grid.major.y = element_blank()
+  ) +
+  facet_wrap(~ event, scale = 'free_y', nrow = 1) +
+  labs(x = 'Year', y = 'Number of Event')
+
 # admin1 rank by event types ------------------------------------------------------------------
 
 etypes <- c(l$bat, l$ervl, l$prt, l$rts, l$devl, l$vacl)
@@ -612,13 +646,13 @@ p_subtype <- dfsubtype %>%
 # actor interaction net -----------------------------------------------------------------------
 
 actor_interactions <- acled %>%
-  group_by(INTER1, INTER2) %>%
+  group_by(ACT1, ACT2) %>%
   summarize(freq = n(), .groups = 'drop') %>%
-  filter(INTER1 != "n/a" & INTER2 != "n/a") %>%
+  filter(ACT1 != "n/a" & ACT2 != "n/a") %>%
   arrange(desc(freq))
 
 graph_data <- actor_interactions %>%
-  as_tbl_graph(directed = TRUE, node_key = "Actor", edge = c("INTER1", "INTER2"))
+  as_tbl_graph(directed = TRUE, node_key = "Actor", edge = c("ACT1", "ACT2"))
 
 pnet <- ggraph(graph_data, layout = "auto") + 
   geom_edge_link(aes(width = freq), alpha = 0.8, color = zcol[1]) +
@@ -632,7 +666,7 @@ pnet <- ggraph(graph_data, layout = "auto") +
   theme(plot.margin = unit(c(0,0,0,0), 'pt'), legend.title = element_text(size = 8), 
         legend.text = element_text(size = 7), plot.title = element_text(hjust = 0.5))
 
-ptil <- ggplot(actor_interactions, aes(INTER1, INTER2, fill = freq)) + 
+ptil <- ggplot(actor_interactions, aes(ACT1, ACT2, fill = freq)) + 
   geom_tile() + scale_fill_viridis(discrete = F)
 
 # actor occurance -----------------------------------------------------------------------------
@@ -680,15 +714,7 @@ p_actor <- p_actor + space + p_actor_fat + layw2
 
 stop.words <- stopwords('en')
 
-create.wc <- function(
-    data = '', 
-    src.in = '', 
-    src = '', 
-    words = '', 
-    rem.words = stop.words, 
-    min = '',
-    max = ''
-) {
+create.wc <- function(data, src.in, src, words, rem.words = stop.words, min, max) {
   note <- data %>% filter({{src.in}} == src) %>% dplyr::select({{words}})
   text <- paste(note, collapse = " ")
   corpus <- Corpus(VectorSource(text))
@@ -716,37 +742,35 @@ create.wc <- function(
 
 # wordcloud: comparison and commonality -------------------------------------------------------
 
-labels <- c("Battles", "ERV", "Protests", "Riots", "Str.Dev.", "VAC")
-
-notes_list <- lapply(labels, function(x) {
-  acled %>%
-    filter(EVENT_TYPE_SRT == x) %>%
-    dplyr::select(NOTES) %>%
-    mutate(labels = x)
-})
-
-dataset.corpus <- lapply(notes_list, function(x) VCorpus(VectorSource(toString(x))))
-dataset.corpus.all <- dataset.corpus[[1]]
-for (i in 2:length(labels)) {dataset.corpus.all <- c(dataset.corpus.all, dataset.corpus[[i]])}
-
-dataset.corpus.all <- tm_map(dataset.corpus.all, content_transformer(tolower))
-dataset.corpus.all <- tm_map(dataset.corpus.all, removePunctuation)
-dataset.corpus.all <- tm_map(dataset.corpus.all, removeNumbers)
-dataset.corpus.all <- tm_map(dataset.corpus.all, function(x) removeWords(x, stopwords('english')))
-
-document.tm <- TermDocumentMatrix(dataset.corpus.all)
-document.tm.mat <- as.matrix(document.tm)
-colnames(document.tm.mat) <- labels
-document.tm.clean <- removeSparseTerms(document.tm, 0.8)
-document.tm.clean.mat <- as.matrix(document.tm.clean)
-colnames(document.tm.clean.mat) <- labels
-
-index <- as.logical(sapply(rownames(document.tm.clean.mat), function(x) (nchar(x)>3) ))
-document.tm.clean.mat.s <- document.tm.clean.mat[index,]
-
-# head(document.tm.clean.mat.s)
-# comparison.cloud(document.tm.clean.mat.s, min.words = 1, random.order = FALSE, c(4, .4), title.size = 1.4)
-# commonality.cloud(document.tm.clean.mat.s, min.words=1, random.order=FALSE)
+prep.texts <- function(data, src.in, src, words, lab, rem.words) {
+  notes_list <- lapply(lab, function(src) {
+    data %>%
+      filter({{src.in}} == src) %>%
+      dplyr::select({{words}}) %>%
+      mutate(labels = src)
+  })
+  
+  corp.list <- lapply(notes_list, function(x) VCorpus(VectorSource(toString(x))))
+  corp.all <- corp.list[[1]]
+  for (i in 2:length(src)) {corp.all <- c(corp.all, corp.list[[i]])}
+  
+  corp.all <- tm_map(corp.all, content_transformer(tolower))
+  corp.all <- tm_map(corp.all, removePunctuation)
+  corp.all <- tm_map(corp.all, removeNumbers)
+  corp.all <- tm_map(corp.all, function(x) removeWords(x, rem.words))
+  
+  doc.tm <- TermDocumentMatrix(corp.all)
+  doc.tm.mat <- as.matrix(doc.tm)
+  colnames(doc.tm.mat) <- src
+  doc.tm.clean <- removeSparseTerms(doc.tm, 0.8)
+  doc.tm.clean.mat <- as.matrix(doc.tm.clean)
+  colnames(doc.tm.clean.mat) <- src
+  
+  index <- as.logical(sapply(rownames(doc.tm.clean.mat), function(x) (nchar(x)>3) ))
+  result <- doc.tm.clean.mat[index,]
+  
+  return(result)
+}
 
 # alluvial actors -----------------------------------------------------------------------------
 
