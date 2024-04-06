@@ -374,11 +374,8 @@ p_heat_evn
 
 Meningkatnya frekuensi konflik dan terjadi secara bersamaan di sebagian besar wilayah pada titik waktu tersebut mengindikasikan sesuatu peristiwa penting terjadi yang memicu respon secara bersamaan. Dari penelusuran kolom NOTE dalam dataset memperlihatkan informasi yang direpresentasikan melalui wordcloud (Gambar \ref{fig:wcdist}) di bawah, secara umum *protests* mendominasi bulan-bulan ini. Secara berurutan, wordcloud untuk bulan September 2019 (kiri) menunjukkan bahwa tidak ada informasi spesifik tentang isu sentral sebagai pemicu utama, namun beberapa kata yang muncul dapat dijadikan sebagai infornasi penting seperti kata "controversies", "corruption", dan "anticorruption". Pada bulan Oktober 2020, worcloud (tengah) mengindikasikan bahwa isu *Omnibus Law* sepertinya menjadi pemicu. Sementara itu, pada bulan September 2022, wordcloud (kanan) mengindikasikan bahwa isu sentral kenaikan harga Bahan Bakar Minyak (BBM) menjadi pemicunya. Perlu dicatat, reaksi isu-isu sentral tersebut berpeluang berlanjut pada bulan setelahnya.
 
-```{r wcdist, fig.cap='Catatan untuk bulan September 2019 (kiri), Oktober 2020 (tengah), dan September 2022', echo=FALSE, fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE, fig.align='center'}
-par(mfrow = c(1,3), oma = c(0,0,0,0), mar = c(0,0,0,0))
-create.wc(acled, CMONTH, 57, NOTES, 30)
-create.wc(acled, CMONTH, 70, NOTES, 50)
-create.wc(acled, CMONTH, 93, NOTES, 50)
+```{r wcdist, fig.cap='Catatan untuk bulan September 2019, Oktober 2020, dan September 2022', echo=FALSE, fig.dpi=300, fig.height=2.3, fig.width=7.48, message=FALSE, warning=FALSE, fig.align='center'}
+source("script/wc-month.R")
 ```
 
 ```{r htfat, echo=FALSE, fig.align='left', fig.cap='Heatmap Korban Jiwa tiap Wilayah', fig.dpi=300, fig.height=3.66, fig.width=7.48, warning=FALSE}
@@ -395,6 +392,10 @@ Selanjutnya, ditinjau dari tingkat administratif 2 (Kabupaten/Kota) dan 3 (Kecam
 
 ```{r adm23, echo=FALSE, fig.align='left', fig.cap="Sebaran Konflik dan  Korban Jiwa pada Level Kabupaten/Kota dan Kecamatan (7 Besar)", fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE}
 p_adm_evt_fat
+```
+
+```{r wccomyear, fig.cap='Perbandingan dan Kesamaan Catatan Berdasarkan Tahun', fig.dpi=300, fig.width=7.48, fig.height=2.667, echo=FALSE, message=FALSE, warning=FALSE}
+source("script/wc-compare-common-year.R")
 ```
 
 ### **Jenis Konflik dan Korban Jiwa**
@@ -431,8 +432,8 @@ p_evt_adm1_prc
 
 Selanjutnya, kita telaah distribusi dan pola kejadian konflik berdasarkan subjenisnya melalui grafik dalam Gambar \ref{fig:subtype} di bawah. Berdasarkan grafik ini, ditemukan bahwa subtipe *Peaceful protest* adalah yang paling umum dalam kategori *Protests,* sementara *Armed clash* adalah yang paling umum dalam kategori *Battles*. Selain itu, subtipe *Looting/property destruction* menjadi yang paling umum dalam kategori *Strategic developments*, dan *Attack* menjadi yang paling umum dalam kategori *Violence against civilians.*
 
-```{r echo=FALSE, fig.cap='Pola Distribusi Konflik pada Tiap Wilayah Sepanjang Waktu Pengamatan', fig.dpi=300, fig.height=3.2, fig.width=7.48}
-p_con_ym
+```{r echo=FALSE, fig.cap='Pola Distribusi Konflik pada Tiap Wilayah Sepanjang Waktu Pengamatan', fig.dpi=300, fig.height=1.833, fig.width=7.48}
+p_con_y
 ```
 
 ```{r subtype, echo=FALSE, fig.cap='Frekuensi Subjenis Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
@@ -465,14 +466,12 @@ p_heat_typ
 p_heat_typ_fat
 ```
 
-```{r wctype, fig.cap='Wordcloud Berdasarkan Jenis Konflik', echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.48, fig.height=3.6}
-par(mfrow = c(2,3), oma = c(0,0,0,0), mar = c(0,0,0,0))
-create.wc(acled, EVENT_TYPE_SRT, 'Battles', NOTES, 30)
-create.wc(acled, EVENT_TYPE_SRT, 'ERV', NOTES, 1)
-create.wc(acled, EVENT_TYPE_SRT, 'Protests', NOTES, 400)
-create.wc(acled, EVENT_TYPE_SRT, 'Riots', NOTES, 100)
-create.wc(acled, EVENT_TYPE_SRT, 'Str.Dev.', NOTES, 1500)
-create.wc(acled, EVENT_TYPE_SRT, 'VAC', NOTES, 30)
+```{r wctype, fig.cap='Catatan pada Jenis Konflik', echo=FALSE, message=FALSE, warning=FALSE, fig.width=7.48, fig.height=3.6}
+source("script/wc-per-type.R")
+```
+
+```{r wccomtype, fig.cap='Perbandingan dan Kesamaan Catatan pada Jenis Konflik', fig.dpi=300, fig.width=7.48, fig.height=2.667, echo=FALSE, message=FALSE, warning=FALSE}
+source("script/wc-compare-common-type.R")
 ```
 
 ### Aktor
@@ -481,6 +480,10 @@ Analisis interaksi antara aktor-aktor dalam konflik menunjukkan pola yang menari
 
 ```{r actnet, echo=FALSE, fig.cap='Intensitas Interaksi antar Aktor Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
 space + pnet + space + plot_layout(width = c(1, 4, 1))
+```
+
+```{r echo=FALSE, fig.cap='Intensitas Interaksi antar Aktor Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+p_alluvial
 ```
 
 Beberapa aktor memiliki interaksi dengan dirinya sendiri, seperti Rioters dan Political Militias, yang menunjukkan bahwa mereka memiliki subgrup yang beroperasi secara independen dan berinteraksi satu sama lain. Beberapa aktor memiliki interaksi minimal dengan aktor lain, seperti Identity Militias dan State Forces, yang menunjukkan bahwa mereka mungkin memiliki peran yang lebih terbatas dalam konflik. Pola interaksi menunjukkan bahwa beberapa aktor memiliki interaksi yang lebih intensif dengan aktor lain, sementara beberapa aktor memiliki interaksi yang lebih terdistribusi. Fluktuasi interaksi antara aktor-aktor dapat menunjukkan bahwa konflik tidak statis dan dapat berubah seiring waktu atau berdasarkan faktor-faktor lain. Analisis ini dapat membantu dalam memahami dinamika konflik dan identifikasi aktor-aktor kunci serta hubungan yang mungkin mempengaruhi eskalasi atau deeskalasi konflik.
@@ -492,6 +495,10 @@ p_actor
 ```
 
 Di sisi lain, Rebel Groups, Rioters, Identity Militias, Political Militias, dan External/Other Forces memiliki kontribusi yang relatif lebih rendah terhadap angka korban jiwa, dengan total korban jiwa yang jauh lebih kecil dibandingkan Civilians dan State Forces. Meskipun demikian, penting untuk diingat bahwa kontribusi dari setiap aktor dalam konflik ini dapat memiliki implikasi yang signifikan terhadap situasi keseluruhan, terutama dalam hal keamanan dan stabilitas.
+
+```{r actfat, echo=FALSE, fig.cap='Jenis Interaksi antar Aktor', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+p_interaction
+```
 
 ## Analisis Korelasi
 

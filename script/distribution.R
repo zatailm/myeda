@@ -422,12 +422,12 @@ p_con_y <- df_con_y %>%
   geom_text(
     stat = 'summary',
     aes(angle = 90, label = after_stat(y), group = year),
-    fun = sum, vjust = .3, hjust = -.5, size = 2.3
+    fun = sum, vjust = .3, hjust = -.5, size = 2.1
   ) +
   scale_y_continuous(expand = expansion(mult = c(.02, .8))) +
   scale_fill_zata() +
   theme(
-    axis.text.x = element_text(angle = 90, vjust = .4, size = 7),
+    axis.text.x = element_text(angle = 90, vjust = .4, size = 6),
     legend.position = 'none',
     panel.border = element_blank(),
     axis.text.y = element_blank(),
@@ -687,20 +687,20 @@ create.plactr <- function(df, x, y, opt, tit) {
 }
 
 df_cas_act <- acled %>%
-  count(INTER1, INTER2, wt = FATALITIES) %>%
-  mutate(actors = ifelse(is.na(INTER2), INTER1, INTER2), total = n) %>%
+  count(ACT1, ACT2, wt = FATALITIES) %>%
+  mutate(actors = ifelse(is.na(ACT2), ACT1, ACT2), total = n) %>%
   group_by(actors) %>%
   summarize(total = sum(total)) %>%
   arrange(desc(total)) %>%
   filter(total > 0) 
 
 df_act <- acled %>%
-  count(INTER1) %>%
-  rename(actors = INTER1, total = n) %>%
+  count(ACT1) %>%
+  rename(actors = ACT1, total = n) %>%
   filter(!is.na(actors)) %>%
   bind_rows(acled %>%
-              count(INTER2) %>%
-              rename(actors = INTER2, total = n) %>%
+              count(ACT2) %>%
+              rename(actors = ACT2, total = n) %>%
               filter(!is.na(actors))) %>%
   group_by(actors) %>%
   summarize(total = sum(total)) %>%
@@ -709,6 +709,44 @@ df_act <- acled %>%
 p_actor <- create.plactr(df_act, actors, total, 'D', 'Actor Occurance')
 p_actor_fat <- create.plactr(df_cas_act, actors, total, 'C', 'Actors Contributions to Fatalities')
 p_actor <- p_actor + space + p_actor_fat + layw2
+
+# actor interaction ---------------------------------------------------------------------------
+
+df_intr <- acled %>% count(INTERACTION) %>% arrange(desc(n))
+
+p_interaction <- df_intr %>%
+  ggplot(aes(x = fct_rev(reorder(INTERACTION, n)), y = n)) +
+  geom_col(aes(fill = n), width = 0.7) +
+  geom_shadowtext(
+    data = subset(df_intr, n < max(df_intr$n)),
+    aes(label = INTERACTION),
+    hjust = -.1,
+    vjust = -.5,
+    nudge_x = 0.3,
+    colour = 'black',
+    bg.colour = NA,
+    bg.r = 0.2,
+    size = 2.5,
+    angle = 90
+  ) +
+  geom_text(
+    data = subset(df_intr, n >= max(df_intr$n)),
+    aes(x = INTERACTION, y = 0, label = INTERACTION),
+    hjust = -.1,
+    vjust = -.5,
+    nudge_x = .3,
+    color = 'black',
+    size = 2.5,
+    angle = 90
+  ) +
+  scale_y_continuous(trans = 'sqrt', labels = function(x) as.character(x / 1000 * 10)) +
+  scale_fill_viridis_c(option = 'viridis', trans = 'log') +
+  theme(panel.border = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        legend.position = 'none') +
+  labs(x = 'Type of Interactions', y = 'Total (x1000)', caption = 'Square root scaled bar') 
 
 # wordcloud: filtered -------------------------------------------------------------------------
 
