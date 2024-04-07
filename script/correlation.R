@@ -113,4 +113,87 @@ p_dis_evn <- acled %>%
   guides(color = guide_legend(nrow = 1)) +
   labs(x = NULL, y = NULL)
 
+# actor 1 vs actor 2 --------------------------------------------------------------------------
 
+custom_order <- c('Civilians', 'Identity Militias', 'Other Forces', 'Political Militias',
+                  'Protesters', 'Rebel Groups', 'Rioters', 'State Forces', 'Sole Action')
+
+df_cor_actrs <- acled %>% dplyr::select(EVENT_TYPE, ACT1, ACT2) %>%
+  mutate(ACT2 = ifelse(is.na(ACT2), 'Sole Action', ACT2))
+
+df_cor_actrs$ACT2 <- factor(df_cor_actrs$ACT2, levels = custom_order)
+
+p_cor_actrs <- ggplot(df_cor_actrs) +
+  aes(x = ACT1, y = ACT2, fill = EVENT_TYPE) +
+  geom_tile(color = '#ffffff', lwd = 1.5) +
+  scale_fill_zata() +
+  theme(legend.title = element_text(size = 8), 
+        legend.position = 'right',
+        panel.border = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  labs(x = 'Actor 1', y = 'Actor 2', fill = 'Event Type') +
+  coord_flip()
+
+# admin vs interaction fatalities -------------------------------------------------------------
+
+df_inter_fat_adm <- acled %>%
+  group_by(ADMIN1_ABR, INTERACTION) %>%
+  summarise(FATAL = sum(FATALITIES), .groups = 'drop') %>%
+  complete(ADMIN1_ABR, INTERACTION, fill = list(FATAL = NA))
+
+p_adm_inter_fat <- ggplot(df_inter_fat_adm) +
+  aes(x = ADMIN1_ABR, y = INTERACTION, fill = FATAL) +
+  geom_tile(color = 'black', lwd = .7) +
+  scale_fill_viridis(
+    option = 'C', trans = 'log10', begin = .3, end = 1,
+    breaks = round(10^seq(log10(1), log10(max(df_inter_fat_adm$FATAL, na.rm = TRUE)), length.out = 4)),
+    name = 'Fatalities/Province',
+    guide = guide_colorbar(direction = "horizontal"),
+    na.value = "#440154") +
+  theme(legend.position = 'top', legend.justification = 'right', 
+        legend.key.height = unit(1, "mm"),
+        legend.key.width = unit(8, "mm"), legend.title = element_text(size = 7),
+        legend.text = element_text(size = 6), legend.ticks = element_blank(),
+        panel.border = element_blank(), axis.text = element_text(size = 7),
+        axis.ticks.length = unit(1, 'mm'), legend.margin = margin(0, 8, 0, 0))
+
+df_inter_evn_adm <- acled %>%
+  group_by(ADMIN1_ABR, INTERACTION) %>%
+  summarise(n = n(), .groups = 'drop') %>%
+  complete(ADMIN1_ABR, INTERACTION, fill = list(n = NA))
+
+p_adm_inter_evn <- ggplot(df_inter_evn_adm) +
+  aes(x = ADMIN1_ABR, y = INTERACTION, fill = n) +
+  geom_tile(color = 'black', lwd = .7) +
+  scale_fill_viridis(
+    option = 'D', trans = 'log10', begin = .3, end = 1,
+    breaks = round(10^seq(log10(1), log10(max(df_inter_evn_adm$n, na.rm = TRUE)), length.out = 4)),
+    name = 'Fatalities/Province',
+    guide = guide_colorbar(direction = "horizontal"),
+    na.value = "#440154") +
+  theme(legend.position = 'top', legend.justification = 'right', 
+        legend.key.height = unit(1, "mm"),
+        legend.key.width = unit(8, "mm"), legend.title = element_text(size = 7),
+        legend.text = element_text(size = 6), legend.ticks = element_blank(),
+        panel.border = element_blank(), axis.text = element_text(size = 7),
+        axis.ticks.length = unit(1, 'mm'), legend.margin = margin(0, 8, 0, 0))
+
+# fatalities act1 / admin ---------------------------------------------------------------------
+
+df_actrs_adm_fat <- acled %>%
+  group_by(ACT1, ACT2) %>%
+  summarise(FATAL = sum(FATALITIES), .groups = 'drop') %>%
+  mutate(ACT2 = ifelse(is.na(ACT2), 'Sole Action', ACT2))
+
+d <- ggplot(df_actrs_adm_fat) +
+  aes(x = ACT1, y = ACT2, fill = FATAL) +
+  geom_tile() +
+  scale_fill_viridis_c(option = "plasma", 
+                       direction = 1) +
+  theme_minimal()
+
+# Task:
+#   1. complete rows in df_actrs_adm_fat, fill it with NA
+#   2. use df_inter_fat_adm process as reference
+#   3. use viridis in p_adm_inter_fat as reference for plotting
+#   4. ngopi dulu

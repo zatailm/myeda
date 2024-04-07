@@ -850,3 +850,24 @@ p_stream_evn <- ggplot(dstr, aes(x = EVENT_DATE, y = total, fill = EVENT_TYPE_SR
   theme(panel.border = element_blank(), legend.title = element_text(size = 8)) +
   guides(fill = guide_legend(nrow = 1)) +
   labs(x = 'Year', y = 'Value', fill = 'Event Type')
+
+# event type boxplot --------------------------------------------------------------------------
+
+px <- ggplot(acled) +
+  aes(x = YEAR, y = EVENT_TYPE, fill = EVENT_TYPE) +
+  geom_boxplot() +
+  scale_fill_brewer(palette = "Dark2", direction = 1) +
+  theme_minimal()
+
+py <- ggplot(df_prv_geo) +
+  aes(fill = n) +
+  geom_sf(size = 1.2) +
+  scale_fill_viridis_c(option = "viridis", direction = 1) +
+  theme_minimal() +
+  facet_wrap(vars(TYPE))
+
+pz <- ggplot(acled) +
+  aes(x = "", y = YEAR, fill = EVENT_TYPE) +
+  geom_violin(adjust = 1L, scale = "area") +
+  scale_fill_hue(direction = 1) +
+  theme_minimal()
