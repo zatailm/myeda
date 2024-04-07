@@ -54,7 +54,7 @@ p_clean <- compare(do.scan(acled))
 map.loc <- function(layera, layerb, show_legend = TRUE, wrap = FALSE) {
   p <- ggplot() +
     geom_sf(data = layera) + 
-    geom_sf(data = layerb, aes(color = EVENT_TYPE), size = 1.5, alpha = 0.2, show.legend = show_legend) + 
+    geom_sf(data = layerb, aes(color = EVENT_TYPE), size = 1, alpha = 0.2, show.legend = show_legend) + 
     theme_void() +
     theme(legend.position = ifelse(show_legend, 'right', 'none')) +
     scale_color_manual(name = "Event Type", values = pal.zata)
@@ -833,3 +833,20 @@ p_alluvial <- ggplot(data_count, aes(axis1 = ACTOR1, axis2 = ACTOR2, y = log(cou
         axis.ticks = element_blank(), axis.title = element_blank(),
         legend.position = 'none') +
   coord_flip()
+
+# stream events weekly ------------------------------------------------------------------------
+
+dstr <- acled %>%
+  mutate(EVENT_DATE = floor_date(EVENT_DATE, unit = 'week'), EVENT_DATE = as.Date(EVENT_DATE)) %>%
+  group_by(EVENT_DATE, EVENT_TYPE_SRT) %>%
+  summarise(total = n(), .groups = 'drop') %>%
+  ungroup()
+
+p_stream_evn <- ggplot(dstr, aes(x = EVENT_DATE, y = total, fill = EVENT_TYPE_SRT)) +
+  geom_stream() +
+  scale_fill_manual(values = pal.zata) +
+  scale_x_date(breaks = seq(as.Date("2015-01-01"), as.Date("2023-12-31"), 
+                            by = "2 year"), date_labels = "%Y") + 
+  theme(panel.border = element_blank(), legend.title = element_text(size = 8)) +
+  guides(fill = guide_legend(nrow = 1)) +
+  labs(x = 'Year', y = 'Value', fill = 'Event Type')

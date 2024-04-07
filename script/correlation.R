@@ -1,4 +1,5 @@
-##----------------------------------------------------------------------------------- MORAN
+
+# auto spatial --------------------------------------------------------------------------------
 
 ## Permutasi moran
 spatial.moran.mc <- function(data, variable) {
@@ -49,7 +50,7 @@ plot_mcmoran <- function(res, br, col, title = "") {
     scale_x_continuous(breaks = br) +
     scale_y_continuous(expand = expansion(mult = c(0,0.01)))
   
-  print(p)
+  return(p)
 }
 
 p_moran_evn <- plot_mcmoran(result_evt, x_evt, "#2c728e", "Events")
@@ -86,7 +87,8 @@ p_mpe <- plot.moran(df_e, "n", result_evt$lw, "Events")
 p_mpf <- plot.moran(df_f_mod, "n", result_fat$lw, "Fatalities")
 p_moranp <- p_mpe + space + p_mpf + layw2
 
-##----------------------------------------------------------------------------------- JENIS KONFLIK
+# event type correlation ----------------------------------------------------------------------
+
 
 df_cofa <- data_monthly[, c(4:9)] %>%
   set_names(c('Battles', 'ERV', 'Protests', 'Riots', 'Str.Dev.', 'VAC'))
@@ -101,7 +103,7 @@ p_cor_con2 <- ggcorrplot(
   theme(legend.position = 'right', axis.text.x = element_text(angle = 0, hjust = .5),
         legend.key.height = unit(10, 'mm'), legend.key.width = unit(3, 'mm'))
 
-##------------------------------------------------------------------------------------- JITTER
+# admin and event types -----------------------------------------------------------------------
 
 p_dis_evn <- acled %>%
   ggplot(aes(x = ADMIN1_ABR, y = fct_rev(EVENT_TYPE_SRT))) +

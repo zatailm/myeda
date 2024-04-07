@@ -402,6 +402,10 @@ source("script/wc-compare-common-year.R")
 
 #### **Sebaran Setiap Jenis Konflik**
 
+```{r streamtype, echo=FALSE, fig.cap='Grafik Evolusi Data Jenis Konflik Sepanjang Waktu Pengamatan', fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE}
+p_stream_evn
+```
+
 Selanjutnya, Gambar \ref{fig:typfat} menunjukkan data jumlah kemunculan jenis konflik dan jumlah korban jiwa untuk masing-masing jenisnya. Terdapat enam jenis konflik yang disajikan, yaitu *Battles*, *Explosions/Remote violence*, *Protests*, *Riots*, *Strategic developoments*, dan *Violence against civilians*. Dapat dilihat bahwa *Battles* memiliki frekuensi terbanyak dengan 483 kasus, dan memiliki jumlah korban jiwa terbanyak yaitu 414 jiwa. Selain itu, *Explosions*/*Remote violence* memiliki 31 kasus dengan 60 jiwa korban. *Protests* menjadi jenis konflik yang paling sering terjadi dengan 11.249 kasus, tetapi memiliki jumlah korban jiwa terendah yaitu 12 jiwa. Hal ini menunjukkan bahwa *Protests* sering terjadi, tetapi keparahan yang terjadi relatif lebih rendah dibandingkan dengan jenis konflik lain.
 
 ```{r typfat, echo=FALSE, fig.cap='Jumlah Kemunculan Tiap Jenis Konflik dan Korban Jiwa', fig.dpi=300, fig.height=1.833, fig.width=7.48}
@@ -479,7 +483,7 @@ source("script/wc-compare-common-type.R")
 Analisis interaksi antara aktor-aktor dalam konflik menunjukkan pola yang menarik (Gambar \ref{fig:actnet}). Rioters dan State Forces memiliki interaksi terbanyak, dengan total frekuensi 585 dan 578, menunjukkan intensitas konflik antara kedua entitas tersebut. Selanjutnya, State Forces dan Civilians juga memiliki interaksi yang cukup tinggi, dengan total frekuensi 572, menegaskan peran penting mereka dalam konflik. Rebel Groups memiliki interaksi dengan State Forces dan Civilians, yang menunjukkan partisipasi mereka dalam konflik. Political Militias dan Identity Militias memiliki interaksi dengan Civilians dan State Forces, serta dengan dirinya sendiri, menunjukkan bahwa mereka memiliki peran dalam konflik dan mungkin beroperasi dalam beberapa front. External/Other Forces memiliki interaksi dengan Civilians dan Political Militias, menunjukkan bahwa mereka juga berperan dalam konflik dan mungkin beroperasi dalam beberapa front.
 
 ```{r actnet, echo=FALSE, fig.cap='Intensitas Interaksi antar Aktor Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
-space + pnet + space + plot_layout(width = c(1, 4, 1))
+space + pnet + space + plot_layout(width = c(1.5, 4, 1.5))
 ```
 
 ```{r echo=FALSE, fig.cap='Intensitas Interaksi antar Aktor Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
@@ -496,7 +500,7 @@ p_actor
 
 Di sisi lain, Rebel Groups, Rioters, Identity Militias, Political Militias, dan External/Other Forces memiliki kontribusi yang relatif lebih rendah terhadap angka korban jiwa, dengan total korban jiwa yang jauh lebih kecil dibandingkan Civilians dan State Forces. Meskipun demikian, penting untuk diingat bahwa kontribusi dari setiap aktor dalam konflik ini dapat memiliki implikasi yang signifikan terhadap situasi keseluruhan, terutama dalam hal keamanan dan stabilitas.
 
-```{r actfat, echo=FALSE, fig.cap='Jenis Interaksi antar Aktor', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
+```{r actinter, echo=FALSE, fig.cap='Jenis Interaksi antar Aktor', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
 p_interaction
 ```
 
