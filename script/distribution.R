@@ -250,65 +250,116 @@ p_dissc <- wrap_plots(p_disj, p_diss, p_disb, ncol = 1)
 
 # Heatmap -------------------------------------------------------------------------------------
 
-create.heatmap <- function(data, datx, daty, n, event = TRUE) {
-  p <- data %>%
-    ggplot(aes(x = {{datx}}, y = reorder({{daty}}, {{n}}))) +
-    geom_tile(mapping = aes(fill = n), color = '#000000', linewidth = .25) +
-    scale_x_continuous(breaks = seq(0, 108, 4), expand = c(0, 0)) +
-    theme(legend.position = 'top', legend.justification = 'right', 
-          legend.key.height = unit(0.15, "cm"),
-          legend.key.width = unit(1, "cm"), legend.title = element_text(size = 6),
-          legend.text = element_text(size = 6), legend.ticks = element_blank(),
-          panel.border = element_blank(), axis.text = element_text(size = 6),
-          axis.ticks.length = unit(1, 'mm')) +
-    scale_y_discrete(name = NULL, position = "right") +
-    labs(x = 'Number of Month (Continuous)')
-  
-  if (event) {
-    p <- p + 
-      scale_fill_viridis(
-        option = 'D', trans = 'log10', begin = .2, end = 1,
-        breaks = round(10^seq(log10(1), log10(max(data$n)), length.out = 4)),
-        name = paste(l$frq, ' / ', l$bln),
-        guide = guide_colorbar(direction = "horizontal"),
-        na.value = "#440154")
-  } else {
-    p <- p +
-      scale_fill_viridis(
-        option = 'C', trans = 'log10', begin = .2, end = 1,
-        breaks = round(10^seq(log10(1), log10(max(data$n)), length.out = 4)),
-        name = paste(l$frq, ' / ', l$bln),
-        guide = guide_colorbar(direction = "horizontal"),
-        na.value = "#440154")
+create.heatmap <- function(data, xdat, ydat, value, viridis, numeric = FALSE, pass.scale = TRUE) {
+  if (!all(c(xdat, ydat, value) %in% names(data))) {
+    stop('Columns not found in data!')
   }
   
+  p <- data %>%
+    ggplot(aes(x = !!sym(xdat), y = reorder(!!sym(ydat), !!sym(value)))) +
+    geom_tile(aes(fill = !!sym(value)), color = '#000000', linewidth = 0.25) +
+    scale_y_discrete(position = 'right') +
+    scale_fill_viridis(
+      option = viridis, trans = 'log10', begin = 0.2, end = 1,
+      breaks = round(10^seq(log10(1), log10(max(data[[value]], na.rm = TRUE)), length.out = 4)),
+      name = paste(l$frq, ' / ', l$bln),
+      guide = guide_colorbar(direction = "horizontal"),
+      na.value = "#440154"
+    ) +
+    theme(
+      legend.position = 'top', legend.justification = 'right',
+      legend.key.height = unit(1.5, 'mm'), legend.key.width = unit(10, 'mm'),
+      legend.title = element_text(size = 6), legend.text = element_text(size = 6),
+      legend.ticks = element_blank(), panel.border = element_blank(),
+      axis.text = element_text(size = 6), 
+      axis.ticks.length = unit(1, 'mm')
+    ) 
+  
+  if (numeric) {
+    p <- p + scale_x_continuous(breaks = seq(0, 108, 4), expand = c(0, 0))
+  } else {
+    if (pass.scale) {
+      return(p)
+    } else {
+      p <- p + 
+        scale_x_date(
+          breaks = seq(as.Date(min(data[[xdat]])) + years(1), as.Date(max(data[[xdat]])), by = "1 year"),
+          date_labels = "%Y",
+          expand = c(0, 0)
+        )
+    }
+  }
   return(p)
 }
 
 df_heat_adm_evn <- acled %>%
-  count(CMONTH, ADMIN1_ABR) %>%
-  complete(ADMIN1_ABR, CMONTH, fill = list(n = 0))
+  mutate(EVENT_DATE = floor_date(EVENT_DATE, unit = 'month'), EVENT_DATE = as.Date(EVENT_DATE)) %>%
+  count(EVENT_DATE, ADMIN1_ABR) %>%
+  complete(ADMIN1_ABR, EVENT_DATE, fill = list(n = 0))
+
+breaks1 <- as.Date(c('2019-09-01', '2020-10-01', '2022-09-01'))
+breaks2 <- seq(as.Date(min(df_heat_adm_evn$EVENT_DATE)) + months(3),
+               as.Date(max(df_heat_adm_evn$EVENT_DATE)), by = "2 year")
+combined_breaks <- as.Date(union(breaks1, breaks2))
+
+ccol <- ifelse(combined_breaks %in% breaks1, zcol[1], 'black')
+date_labels <- ifelse(combined_breaks %in% breaks1, "%b-%y", "%b-%y")
+
+p_heat_evn <- create.heatmap(
+  data = df_heat_adm_evn,
+  xdat = 'EVENT_DATE',
+  ydat = 'ADMIN1_ABR',
+  value = 'n',
+  viridis = 'D',
+  numeric = FALSE,
+  pass.scale = TRUE) +
+  scale_x_date(breaks = combined_breaks, date_labels = date_labels, expand = c(0, 0)) +
+  theme(axis.text.x = element_text(color = ccol)) +
+  labs(x = l$thn, y = NULL)
 
 df_heat_adm_fat <- acled %>%
-  group_by(ADMIN1_ABR, CMONTH) %>%
-  summarise(n = sum(FATALITIES), .groups = 'drop_last') %>%
-  complete(CMONTH = 1:108) %>%
-  replace_na(list(n = 0))
+  mutate(EVENT_DATE = floor_date(EVENT_DATE, unit = 'month'), EVENT_DATE = as.Date(EVENT_DATE)) %>%
+  group_by(EVENT_DATE, ADMIN1_ABR) %>%
+  summarise(n = sum(FATALITIES), .groups = 'drop') %>%
+  complete(ADMIN1_ABR, EVENT_DATE, fill = list(n = 0))
+
+p_heat_fat <- create.heatmap(
+  df_heat_adm_fat, 'EVENT_DATE', 'ADMIN1_ABR', 'n', 'C', numeric = FALSE, pass.scale = FALSE) +
+  labs(x = l$thn, y = NULL)
 
 df_heat_evn_typ <- acled %>%
-  count(EVENT_TYPE_SRT, CMONTH) %>%
-  complete(EVENT_TYPE_SRT, CMONTH, fill = list(n = 0))
+  mutate(EVENT_DATE = floor_date(EVENT_DATE, unit = 'month'), EVENT_DATE = as.Date(EVENT_DATE)) %>%
+  count(EVENT_DATE, EVENT_TYPE_SRT) %>%
+  complete(EVENT_DATE, EVENT_TYPE_SRT, fill = list(n = 0))
+
+p_heat_typ_evn <- create.heatmap(
+  df_heat_evn_typ, 'EVENT_DATE', 'EVENT_TYPE_SRT', 'n', 'D', numeric = FALSE, pass.scale = FALSE) +
+  labs(x = l$thn, y = NULL)
 
 df_heat_typ_fat <- acled %>%
-  group_by(EVENT_TYPE_SRT, CMONTH) %>%
-  summarise(n = sum(FATALITIES), .groups = 'drop_last') %>%
-  complete(CMONTH = 1:108) %>%
-  replace_na(list(n = 0))
+  mutate(EVENT_DATE = floor_date(EVENT_DATE, unit = 'month'), EVENT_DATE = as.Date(EVENT_DATE)) %>%
+  group_by(EVENT_DATE, EVENT_TYPE_SRT) %>%
+  summarise(n = sum(FATALITIES), .groups = 'drop') %>%
+  complete(EVENT_DATE, EVENT_TYPE_SRT, fill = list(n = 0))
 
-p_heat_evn <- create.heatmap(df_heat_adm_evn, CMONTH, ADMIN1_ABR, n, event = TRUE)
-p_heat_fat <- create.heatmap(df_heat_adm_fat, CMONTH, ADMIN1_ABR, n, event = FALSE)
-p_heat_typ <- create.heatmap(df_heat_evn_typ, CMONTH, EVENT_TYPE_SRT, n, event = TRUE)
-p_heat_typ_fat <- create.heatmap(df_heat_typ_fat, CMONTH, EVENT_TYPE_SRT, n, event = FALSE)
+p_heat_typ_fat <- create.heatmap(
+  df_heat_typ_fat, 'EVENT_DATE', 'EVENT_TYPE_SRT', 'n', 'C', numeric = FALSE, pass.scale = FALSE) +
+  labs(x = l$thn, y = NULL)
+
+# NOTE : when using numeric xdat, numeric and pass.scale should be TRUE
+# df_heat_adm_evn <- acled %>%
+#   count(CMONTH, ADMIN1_ABR) %>%
+#   complete(ADMIN1_ABR, CMONTH, fill = list(n = 0))
+# 
+# create.heatmap(
+#   data = df_heat_adm_evn,
+#   xdat = 'CMONTH',
+#   ydat = 'ADMIN1_ABR',
+#   value = 'n',
+#   viridis = 'C',
+#   numeric = TRUE,
+#   pass.scale = TRUE
+# )
 
 # admin2 and admin3 events - fatalities -------------------------------------------------------
 
@@ -837,7 +888,7 @@ p_alluvial <- ggplot(data_count, aes(axis1 = ACTOR1, axis2 = ACTOR2, y = log(cou
 # stream events weekly ------------------------------------------------------------------------
 
 dstr <- acled %>%
-  mutate(EVENT_DATE = floor_date(EVENT_DATE, unit = 'week'), EVENT_DATE = as.Date(EVENT_DATE)) %>%
+  mutate(EVENT_DATE = ceiling_date(EVENT_DATE, unit = 'week'), EVENT_DATE = as.Date(EVENT_DATE)) %>%
   group_by(EVENT_DATE, EVENT_TYPE_SRT) %>%
   summarise(total = n(), .groups = 'drop') %>%
   ungroup()
