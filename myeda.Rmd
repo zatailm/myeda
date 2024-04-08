@@ -463,7 +463,7 @@ p_dis_evn
 ```
 
 ```{r heattype, echo=FALSE, fig.cap='Distribusi Titik-titik Jenis Konflik di Seluruh Wilayah', fig.dpi=300, fig.height=1.2, fig.width=7.48, message=FALSE, warning=FALSE}
-p_heat_typ
+p_heat_typ_evn
 ```
 
 ```{r heattypefat, echo=FALSE, fig.cap='Distribusi Korban Jiwa per Bulan', fig.dpi=300, fig.height=1.2, fig.width=7.48, message=FALSE, warning=FALSE}

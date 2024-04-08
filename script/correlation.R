@@ -183,14 +183,18 @@ p_adm_inter_evn <- ggplot(df_inter_evn_adm) +
 df_actrs_adm_fat <- acled %>%
   group_by(ACT1, ACT2) %>%
   summarise(FATAL = sum(FATALITIES), .groups = 'drop') %>%
-  mutate(ACT2 = ifelse(is.na(ACT2), 'Sole Action', ACT2))
+  mutate(ACT2 = ifelse(is.na(ACT2), 'Sole Action', ACT2)) %>%
+  complete(ACT1, ACT2, fill = list(FATAL = NA))
 
 d <- ggplot(df_actrs_adm_fat) +
   aes(x = ACT1, y = ACT2, fill = FATAL) +
-  geom_tile() +
-  scale_fill_viridis_c(option = "plasma", 
-                       direction = 1) +
-  theme_minimal()
+  geom_tile(color = 'black', lwd = 1) +
+  scale_fill_viridis(
+    option = 'C', trans = 'log10', begin = .3, end = 1,
+    breaks = round(10^seq(log10(1), log10(max(df_actrs_adm_fat$FATAL, na.rm = TRUE)), length.out = 4)),
+    name = 'Fatalities/Province',
+    guide = guide_colorbar(direction = "horizontal"),
+    na.value = "#440154") 
 
 # Task:
 #   1. complete rows in df_actrs_adm_fat, fill it with NA
