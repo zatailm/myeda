@@ -2,7 +2,7 @@
 layout_matrix <- matrix(c(1:4), nrow = 2, byrow = TRUE)
 
 layout(mat = layout_matrix,
-       heights = c(.5, 3), 
+       heights = c(.25, 3), 
        widths = c(3, 3))
 
 # layout.show(12)

@@ -2,8 +2,8 @@
 layout_matrix <- matrix(c(1:12), nrow = 4, byrow = TRUE)
 
 layout(mat = layout_matrix,
-       heights = c(.5, 3, .5, 3), # Heights of the four rows
-       widths = c(3, 3, 3))     # Widths of the three columns
+       heights = c(.25, 3, .25, 3), # Heights of the four rows
+       widths = c(3, 3, 3))         # Widths of the three columns
 
 # layout.show(12)
 
