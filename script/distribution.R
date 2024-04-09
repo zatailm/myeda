@@ -56,7 +56,7 @@ map.loc <- function(layera, layerb, show_legend = TRUE, wrap = FALSE) {
     geom_sf(data = layera) + 
     geom_sf(data = layerb, aes(color = EVENT_TYPE), size = 1, alpha = 0.2, show.legend = show_legend) + 
     theme_void() +
-    theme(legend.position = ifelse(show_legend, 'right', 'none')) +
+    theme(legend.position = ifelse(show_legend, 'right', 'none'), legend.title = element_text(size = 8)) +
     scale_color_manual(name = "Event Type", values = pal.zata)
   if (wrap) {
     p <- p + facet_wrap(~EVENT_TYPE, ncol = 3)
@@ -82,9 +82,9 @@ map.plot <- function(data, title, breaks, labels, option) {
     theme(
       legend.position = 'bottom', legend.text = element_text(size = 7),
       legend.key.height = unit(3, 'pt'), legend.key.width = unit(10, 'pt'),
-      plot.title = element_text(hjust = 0.5, face = 'bold', size = 9),
-      plot.margin = ggplot2::margin(0, 0, 0, 0, 'pt'), legend.justification = 'left',
-      legend.title = element_blank()) +
+      plot.title = element_text(hjust = 0.5, size = 8),
+      plot.margin = ggplot2::margin(0, 0, 0, 0, 'pt'), legend.justification = 'right',
+      legend.title = element_blank(), legend.margin = ggplot2::margin(0, 20, 0, 0)) +
     labs(title = title)
 }
 
@@ -680,19 +680,20 @@ dfsubtype <- dfsubtype %>% mutate(Sub = recode(as.character(subtype), !!!subbr))
 dfsubtype$Sub <- factor(dfsubtype$Sub, levels = dfsubtype$Sub[order(dfsubtype$type)])
 
 p_subtype <- dfsubtype %>%
-  ggplot(aes(x = Sub, y = Freq, fill = as.factor(type))) +
+  ggplot(aes(x = fct_rev(reorder(Sub, Freq)), y = Freq, fill = as.factor(type))) +
   geom_bar(stat = 'identity', position = 'dodge', width = .6) +
   geom_text(aes(y = Freq, label = Freq), position = 'identity',
             size = 2.5, hjust = -.3, vjust = .3, angle = 90) +
-  scale_y_continuous(trans = 'sqrt', expand = expansion(mult = c(.01, .5))) +
+  scale_y_continuous(trans = 'log', expand = expansion(mult = c(.01, .5))) +
   scale_fill_zata() +
   theme(legend.position = 'right', panel.border = element_blank(), 
         panel.grid.major.y = element_blank(), axis.text.y = element_blank(),
         axis.ticks.y = element_blank(), axis.title.y = element_blank(),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = .2),
-        plot.margin = unit(c(0,60,0,60), 'pt')) +
+        plot.margin = unit(c(0,60,0,60), 'pt'),
+        plot.caption.position = "plot", legend.title = element_text(size = 8)) +
   guides(fill = guide_legend(title = "Event Types", size = 5)) + 
-  xlab('Sub Event Types')
+  labs(x = 'Sub Event Types', y = NULL, caption = 'Logarithmic scaled bar')
 
 # actor interaction net -----------------------------------------------------------------------
 
@@ -888,7 +889,7 @@ p_alluvial <- ggplot(data_count, aes(axis1 = ACTOR1, axis2 = ACTOR2, y = log(cou
 # stream events weekly ------------------------------------------------------------------------
 
 dstr <- acled %>%
-  mutate(EVENT_DATE = ceiling_date(EVENT_DATE, unit = 'week'), EVENT_DATE = as.Date(EVENT_DATE)) %>%
+  mutate(EVENT_DATE = floor_date(EVENT_DATE, unit = 'week'), EVENT_DATE = as.Date(EVENT_DATE)) %>%
   group_by(EVENT_DATE, EVENT_TYPE_SRT) %>%
   summarise(total = n(), .groups = 'drop') %>%
   ungroup()
