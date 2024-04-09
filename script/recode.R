@@ -1,11 +1,11 @@
 ##----load_data---------------------------------------------
 acled <- readRDS('data/acled-idn-15-23.rds')
 # acled <- read_excel('data/IDN2015-2023.xlsx')
-dataraw <- acled
+df_acled_raw <- acled
 acled <- acled[,-c(1,4,5,9,12,15:18,25:27,30,31)]
-idn1 <- readRDS('data/IDN38.rds')
-# idn1 <- st_read('data/38.shp')
-prvnc <- st_as_sf(idn1)
+df_sf_idn <- readRDS('data/map-idn.rds')
+# df_sf_idn <- st_read('data/38.shp')
+prvnc <- st_as_sf(df_sf_idn)
 
 ##----list---------------------------------------------
 inter <- c(

@@ -18,7 +18,7 @@ spatial.moran.mc <- function(data, variable) {
 
 df_f_mod <- df_prv_geo %>% filter(TYPE == 'FATALITIES') %>% mutate(n = replace(n, is.na(n), 0))
 
-result_evt <- spatial.moran.mc(df_e, "n")
+result_evt <- spatial.moran.mc(df_sf_evn, "n")
 result_fat <- spatial.moran.mc(df_f_mod, "n")
 
 x_evt <- seq(-.4, .6, by = .2)
@@ -82,15 +82,15 @@ plot.moran <- function(df_spatial, variable, listw, title) {
   return(p)
 }
 
-# df_e dan df_f sebagai dasar df_f_mod didefinisikan di distribution
-p_mpe <- plot.moran(df_e, "n", result_evt$lw, "Events")
+# df_sf_evn dan df_sf_fat sebagai dasar df_f_mod didefinisikan di distribution
+p_mpe <- plot.moran(df_sf_evn, "n", result_evt$lw, "Events")
 p_mpf <- plot.moran(df_f_mod, "n", result_fat$lw, "Fatalities")
 p_moranp <- p_mpe + space + p_mpf + layw2
 
 # event type correlation ----------------------------------------------------------------------
 
 
-df_cofa <- data_monthly[, c(4:9)] %>%
+df_cofa <- df_monthly_num[, c(4:9)] %>%
   set_names(c('Battles', 'ERV', 'Protests', 'Riots', 'Str.Dev.', 'VAC'))
 
 df_cor <- round(cor(df_cofa), 1)

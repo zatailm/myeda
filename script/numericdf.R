@@ -1,4 +1,4 @@
-data_evt_fat <- acled %>%
+df_evt_fat <- acled %>%
   mutate(
     EVENT_DATE = as.Date(EVENT_DATE), 
     MONTH = floor_date(EVENT_DATE, "month")) %>%
@@ -22,7 +22,7 @@ data_evt_fat <- acled %>%
   ) %>%
   arrange(MONTH)
 
-data_monthly_type <- acled %>%
+df_monthly_num_type <- acled %>%
   mutate(EVENT_DATE = as.Date(EVENT_DATE), 
          MONTH = floor_date(EVENT_DATE, 'month')) %>%
   group_by(MONTH, EVENT_TYPE) %>%
@@ -44,7 +44,7 @@ data_monthly_type <- acled %>%
     .groups = 'drop_last') %>%
   arrange(MONTH)
 
-data_monthly <- acled %>%
+df_monthly_num <- acled %>%
   mutate(EVENT_DATE = as.Date(EVENT_DATE),
          MONTH = floor_date(EVENT_DATE, "month")) %>%
   group_by(MONTH) %>%

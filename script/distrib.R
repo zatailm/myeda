@@ -184,11 +184,11 @@ generate_plot <- function(data, geom = "jitter", method = "density", axis_text =
   return(p)
 }
 
-dfdist <- acled %>% mutate(ADMIN1_ABR = fct_rev(fct_infreq(ADMIN1_ABR)))
+df_distr_adm_evn <- acled %>% mutate(ADMIN1_ABR = fct_rev(fct_infreq(ADMIN1_ABR)))
 
-p_disj <- generate_plot(dfdist, geom = "jitter", axis_text = FALSE)
-p_diss <- generate_plot(dfdist, geom = "sina", method = "density", axis_text = FALSE)
-p_disb <- generate_plot(dfdist, geom = "sina", method = "boxplot")
+p_disj <- generate_plot(df_distr_adm_evn, geom = "jitter", axis_text = FALSE)
+p_diss <- generate_plot(df_distr_adm_evn, geom = "sina", method = "density", axis_text = FALSE)
+p_disb <- generate_plot(df_distr_adm_evn, geom = "sina", method = "boxplot")
 p_dissc <- wrap_plots(p_disj, p_diss, p_disb, ncol = 1)
 
 ## Heatmap
@@ -429,14 +429,14 @@ df_fat <- acled %>% group_by(ADMIN1, EVENT_TYPE) %>%
   mutate(FATAL = replace(FATAL, FATAL == 0, NA)) %>%
   complete(ADMIN1, EVENT_TYPE, fill = list(FATAL = NA))
 
-df_adm_fat <- prvnc %>%
+df_sf_adm_type_fat <- prvnc %>%
   left_join(df_fat, by = c('PROVINSI' = 'ADMIN1'))
 
 p_cho_adm_fat <- ggplot() +
-  geom_sf(data = df_adm_fat, aes(fill = FATAL), lwd = NA) +
+  geom_sf(data = df_sf_adm_type_fat, aes(fill = FATAL), lwd = NA) +
   scale_fill_viridis_c(
     option = 'C', trans = 'log1p', na.value = pal.zata.grey[4], direction = 1, 
-    breaks = c(1, max(df_adm_fat$FATAL, na.rm = TRUE)), begin = .05, end = .95, 
+    breaks = c(1, max(df_sf_adm_type_fat$FATAL, na.rm = TRUE)), begin = .05, end = .95, 
     name = l$nn) +
   scale_x_continuous(expand = expansion(mult = c(.03, .03))) +
   theme_void(10) +
@@ -474,10 +474,10 @@ create.wc <- function(month, min) {
 }
 
 ## density2d
-dfden <- acled %>% group_by(CMONTH, EVENT_TYPE_SRT) %>% summarise(n = n(), .groups = 'drop_last')
+df_for_density <- acled %>% group_by(CMONTH, EVENT_TYPE_SRT) %>% summarise(n = n(), .groups = 'drop_last')
 
 create.den2d <- function(fill = FALSE, point = FALSE) {
-  p <- dfden %>%
+  p <- df_for_density %>%
     ggplot(aes(x = CMONTH, y = n)) +
     scale_x_continuous(breaks = seq(1, 107, 7)) +
     scale_y_continuous(trans = 'log1p') +
@@ -515,14 +515,14 @@ plot.c22 <- function(p1, p2, p3, p4) {
 }
 
 ##---
-dfsubtype <- data.frame(table(acled$EVENT_TYPE, acled$SUB_EVENT_TYPE)) %>% filter(Freq != 0) %>% rename(type = Var1, subtype = Var2)
+df_subtype <- data.frame(table(acled$EVENT_TYPE, acled$SUB_EVENT_TYPE)) %>% filter(Freq != 0) %>% rename(type = Var1, subtype = Var2)
 
 mtpe <- c(
   'Violence against civilians' = 'VAC', 'Explosions/Remote violence' = 'ERV', 
   'Battles' = 'Battles', 'Strategic developments' = 'Str.Dev.', 'Protests' = 'Protests',
   'Riots' = 'Riots'
 )
-dfsubtype <- dfsubtype %>% mutate(typ = recode(as.character(type), !!!mtpe))
+df_subtype <- df_subtype %>% mutate(typ = recode(as.character(type), !!!mtpe))
 subbr <- c(
   'Abduction/forced disappearance' = 'Abduction',
   'Air/drone strike' = 'Air strike',
@@ -545,10 +545,10 @@ subbr <- c(
   'Suicide bomb' = 'Suicide bomb',
   'Violent demonstration' = 'Violent demo.'
 )
-dfsubtype <- dfsubtype %>% mutate(Sub = recode(as.character(subtype), !!!subbr))
-dfsubtype$Sub <- factor(dfsubtype$Sub, levels = dfsubtype$Sub[order(dfsubtype$type)])
+df_subtype <- df_subtype %>% mutate(Sub = recode(as.character(subtype), !!!subbr))
+df_subtype$Sub <- factor(df_subtype$Sub, levels = df_subtype$Sub[order(df_subtype$type)])
 
-p_subtype <- dfsubtype %>%
+p_subtype <- df_subtype %>%
   ggplot(aes(x = Sub, y = Freq, fill = as.factor(type))) +
   geom_bar(stat = 'identity', position = 'dodge', width = .6) +
   geom_text(aes(y = Freq, label = Freq), position = 'identity',
@@ -566,14 +566,14 @@ p_subtype <- dfsubtype %>%
 
 ## Aktor
 
-actor_interactions <- acled %>%
+df_act_interaction <- acled %>%
   group_by(INTER1, INTER2) %>%
   summarize(freq = n(), .groups = 'drop') %>%
   filter(INTER1 != "n/a" & INTER2 != "n/a") %>%
   arrange(desc(freq))
 
 # Create a tbl_graph
-graph_data <- actor_interactions %>%
+graph_data <- df_act_interaction %>%
   as_tbl_graph(directed = TRUE, node_key = "Actor", edge = c("INTER1", "INTER2"))
 
 pnet <- ggraph(graph_data, layout = "auto") + 
@@ -588,7 +588,7 @@ pnet <- ggraph(graph_data, layout = "auto") +
   theme(plot.margin = unit(c(0,0,0,0), 'pt'), legend.title = element_text(size = 8), 
         legend.text = element_text(size = 7), plot.title = element_text(hjust = 0.5))
 
-ptil <- ggplot(actor_interactions, aes(INTER1, INTER2, fill = freq)) + 
+ptil <- ggplot(df_act_interaction, aes(INTER1, INTER2, fill = freq)) + 
   geom_tile() + scale_fill_viridis(discrete = F)
 
 ##---

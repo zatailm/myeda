@@ -46,7 +46,7 @@ compare <- function(data, clean = TRUE) {
   return(p)
 }
 
-p_raw <- compare(do.scan(dataraw), clean = FALSE)
+p_raw <- compare(do.scan(df_acled_raw), clean = FALSE)
 p_clean <- compare(do.scan(acled))
 
 # location map --------------------------------------------------------------------------------
@@ -64,10 +64,10 @@ map.loc <- function(layera, layerb, show_legend = TRUE, wrap = FALSE) {
   return(p)
 }
 
-sf_data <- st_as_sf(acled, coords = c("LONGITUDE", "LATITUDE"), crs = 4326)
+df_sf_adm <- st_as_sf(acled, coords = c("LONGITUDE", "LATITUDE"), crs = 4326)
 
-p_loc_map <- map.loc(prvnc, sf_data, show_legend = TRUE, wrap = FALSE)
-p_loc_map_type <- map.loc(prvnc, sf_data, show_legend = FALSE, wrap = TRUE) 
+p_loc_map <- map.loc(prvnc, df_sf_adm, show_legend = TRUE, wrap = FALSE)
+p_loc_map_type <- map.loc(prvnc, df_sf_adm, show_legend = FALSE, wrap = TRUE) 
 
 # choropleth events and fatalities ------------------------------------------------------------
 
@@ -102,21 +102,21 @@ df_fat <- acled %>%
 df_prv_geo <- prvnc %>% 
   left_join(rbind(df_adm, df_fat), by = c('PROVINSI' = 'ADMIN1'))
 
-df_e <- df_prv_geo %>% filter(TYPE == 'EVENT')
-df_f <- df_prv_geo %>% filter(TYPE == 'FATALITIES')
+df_sf_evn <- df_prv_geo %>% filter(TYPE == 'EVENT')
+df_sf_fat <- df_prv_geo %>% filter(TYPE == 'FATALITIES')
 
 p_geo_adm <- map.plot(
-  data = df_e, 
+  data = df_sf_evn, 
   title = "Event", 
-  breaks = na.omit(c(min(df_e$n, na.rm = T), max(df_e$n, na.rm = T))), 
-  labels = na.omit(c(min(df_e$n, na.rm = T), max(df_e$n, na.rm = T))), 
+  breaks = na.omit(c(min(df_sf_evn$n, na.rm = T), max(df_sf_evn$n, na.rm = T))), 
+  labels = na.omit(c(min(df_sf_evn$n, na.rm = T), max(df_sf_evn$n, na.rm = T))), 
   option = "D")
 
 p_geo_fat <- map.plot(
-  data = df_f, 
+  data = df_sf_fat, 
   title = "Fatalities", 
-  breaks = na.omit(c(min(df_f$n, na.rm = T), max(df_f$n, na.rm = T))), 
-  labels = na.omit(c(min(df_f$n, na.rm = T), max(df_f$n, na.rm = T))), 
+  breaks = na.omit(c(min(df_sf_fat$n, na.rm = T), max(df_sf_fat$n, na.rm = T))), 
+  labels = na.omit(c(min(df_sf_fat$n, na.rm = T), max(df_sf_fat$n, na.rm = T))), 
   option = "C")
 
 # comparing event and fatalities plot ---------------------------------------------------------
@@ -149,10 +149,10 @@ com.plot <- function(data, x, y1, y2, abr = TRUE) {
   return(p)
 }
 
-df_ea <- acled %>% group_by(ADMIN1_ABR, ADMINID) %>% count(ADMIN1_ABR)
-df_fa <- acled %>% group_by(ADMIN1_ABR, ADMINID) %>% 
+df_event_adm <- acled %>% group_by(ADMIN1_ABR, ADMINID) %>% count(ADMIN1_ABR)
+df_adm_fat <- acled %>% group_by(ADMIN1_ABR, ADMINID) %>% 
   summarize(n = sum(FATALITIES), .groups = 'drop') %>% arrange(desc(n)) %>% ungroup()
-df_comp_evnfat <- left_join(df_ea, df_fa, by = c("ADMIN1_ABR", "ADMINID")) %>%
+df_comp_evnfat <- left_join(df_event_adm, df_adm_fat, by = c("ADMIN1_ABR", "ADMINID")) %>%
   rename(Events = n.x, Fatalities = n.y)
 
 p_compare_reg <- com.plot(data = df_comp_evnfat, x = ADMIN1_ABR, y1 = Events, y2 = Fatalities)
@@ -241,11 +241,11 @@ scat.plot <- function(data, geom = "jitter", method = "density", axis_text = TRU
   return(p)
 }
 
-dfdist <- acled %>% mutate(ADMIN1_ABR = fct_rev(fct_infreq(ADMIN1_ABR)))
+df_distr_adm_evn <- acled %>% mutate(ADMIN1_ABR = fct_rev(fct_infreq(ADMIN1_ABR)))
 
-p_disj <- scat.plot(dfdist, geom = "jitter", axis_text = FALSE)
-p_diss <- scat.plot(dfdist, geom = "sina", method = "density", axis_text = FALSE)
-p_disb <- scat.plot(dfdist, geom = "sina", method = "boxplot")
+p_disj <- scat.plot(df_distr_adm_evn, geom = "jitter", axis_text = FALSE)
+p_diss <- scat.plot(df_distr_adm_evn, geom = "sina", method = "density", axis_text = FALSE)
+p_disb <- scat.plot(df_distr_adm_evn, geom = "sina", method = "boxplot")
 p_dissc <- wrap_plots(p_disj, p_diss, p_disb, ncol = 1)
 
 # Heatmap -------------------------------------------------------------------------------------
@@ -461,9 +461,9 @@ df_con_y_raw <- acled %>%
   summarise(total = n(), .groups = 'drop_last') %>%
   rename(year = YEAR, event = EVENT_TYPE_SRT)
 
-all_combinations <- expand.grid(year = unique(df_con_y_raw$year), event = unique(df_con_y_raw$event))
+df_type_year <- expand.grid(year = unique(df_con_y_raw$year), event = unique(df_con_y_raw$event))
 
-df_con_y <- all_combinations %>%
+df_con_y <- df_type_year %>%
   left_join(df_con_y_raw, by = c("year", "event")) %>%
   mutate(total = replace(total, is.na(total), 0))
 
@@ -540,14 +540,14 @@ df_fat <- acled %>% group_by(ADMIN1, EVENT_TYPE) %>%
   mutate(FATAL = replace(FATAL, FATAL == 0, NA)) %>%
   complete(ADMIN1, EVENT_TYPE, fill = list(FATAL = NA))
 
-df_adm_fat <- prvnc %>%
+df_sf_adm_type_fat <- prvnc %>%
   left_join(df_fat, by = c('PROVINSI' = 'ADMIN1'))
 
 p_cho_adm_fat <- ggplot() +
-  geom_sf(data = df_adm_fat, aes(fill = FATAL), lwd = NA) +
+  geom_sf(data = df_sf_adm_type_fat, aes(fill = FATAL), lwd = NA) +
   scale_fill_viridis_c(
     option = 'C', trans = 'log1p', na.value = pal.zata.grey[4], direction = 1, 
-    breaks = c(1, max(df_adm_fat$FATAL, na.rm = TRUE)), begin = .05, end = .95, 
+    breaks = c(1, max(df_sf_adm_type_fat$FATAL, na.rm = TRUE)), begin = .05, end = .95, 
     name = l$nn) +
   scale_x_continuous(expand = expansion(mult = c(.03, .03))) +
   theme_void(10) +
@@ -607,10 +607,10 @@ create.den2d <- function(data, x, y, fill = FALSE, point = FALSE) {
   return(p)
 }
 
-dfden <- acled %>% group_by(CMONTH, EVENT_TYPE_SRT) %>% summarise(n = n(), .groups = 'drop_last')
+df_for_density <- acled %>% group_by(CMONTH, EVENT_TYPE_SRT) %>% summarise(n = n(), .groups = 'drop_last')
 
-pden2d <- create.den2d(dfden, CMONTH, n, point = TRUE) + space + 
-  create.den2d(dfden, CMONTH, n,fill = TRUE, point = FALSE) + 
+pden2d <- create.den2d(df_for_density, CMONTH, n, point = TRUE) + space + 
+  create.den2d(df_for_density, CMONTH, n,fill = TRUE, point = FALSE) + 
   layw2 + plot_layout(axis_titles = 'collect') +
   plot_annotation(
     title = NULL,
@@ -642,7 +642,7 @@ create.ef <- function(df, x, y, tit, d = TRUE) {
 
 # sub event types frequencies -----------------------------------------------------------------
 
-dfsubtype <- data.frame(table(acled$EVENT_TYPE, acled$SUB_EVENT_TYPE)) %>% 
+df_subtype <- data.frame(table(acled$EVENT_TYPE, acled$SUB_EVENT_TYPE)) %>% 
   filter(Freq != 0) %>% 
   rename(type = Var1, subtype = Var2)
 
@@ -652,7 +652,7 @@ mtpe <- c(
   'Riots' = 'Riots'
 )
 
-dfsubtype <- dfsubtype %>% mutate(typ = recode(as.character(type), !!!mtpe))
+df_subtype <- df_subtype %>% mutate(typ = recode(as.character(type), !!!mtpe))
 subbr <- c(
   'Abduction/forced disappearance' = 'Abduction',
   'Air/drone strike' = 'Air strike',
@@ -676,10 +676,10 @@ subbr <- c(
   'Violent demonstration' = 'Violent demo.'
 )
 
-dfsubtype <- dfsubtype %>% mutate(Sub = recode(as.character(subtype), !!!subbr))
-dfsubtype$Sub <- factor(dfsubtype$Sub, levels = dfsubtype$Sub[order(dfsubtype$type)])
+df_subtype <- df_subtype %>% mutate(Sub = recode(as.character(subtype), !!!subbr))
+df_subtype$Sub <- factor(df_subtype$Sub, levels = df_subtype$Sub[order(df_subtype$type)])
 
-p_subtype <- dfsubtype %>%
+p_subtype <- df_subtype %>%
   ggplot(aes(x = fct_rev(reorder(Sub, Freq)), y = Freq, fill = as.factor(type))) +
   geom_bar(stat = 'identity', position = 'dodge', width = .6) +
   geom_text(aes(y = Freq, label = Freq), position = 'identity',
@@ -697,13 +697,13 @@ p_subtype <- dfsubtype %>%
 
 # actor interaction net -----------------------------------------------------------------------
 
-actor_interactions <- acled %>%
+df_act_interaction <- acled %>%
   group_by(ACT1, ACT2) %>%
   summarize(freq = n(), .groups = 'drop') %>%
   filter(ACT1 != "n/a" & ACT2 != "n/a") %>%
   arrange(desc(freq))
 
-graph_data <- actor_interactions %>%
+graph_data <- df_act_interaction %>%
   as_tbl_graph(directed = TRUE, node_key = "Actor", edge = c("ACT1", "ACT2"))
 
 pnet <- ggraph(graph_data, layout = "auto") + 
@@ -718,7 +718,7 @@ pnet <- ggraph(graph_data, layout = "auto") +
   theme(plot.margin = unit(c(0,0,0,0), 'pt'), legend.title = element_text(size = 8), 
         legend.text = element_text(size = 7), plot.title = element_text(hjust = 0.5))
 
-ptil <- ggplot(actor_interactions, aes(ACT1, ACT2, fill = freq)) + 
+ptil <- ggplot(df_act_interaction, aes(ACT1, ACT2, fill = freq)) + 
   geom_tile() + scale_fill_viridis(discrete = F)
 
 # actor occurance -----------------------------------------------------------------------------
@@ -864,17 +864,17 @@ prep.texts <- function(data, src.in, src, words, lab, rem.words) {
 
 # alluvial actors -----------------------------------------------------------------------------
 
-data_filtered <- acled %>%
+df_filt_act12 <- acled %>%
   dplyr::select(ACT1, ACT2) %>%
   na.omit() 
 
-data_count <- data_filtered %>%
+df_act_inter <- df_filt_act12 %>%
   group_by(ACT1, ACT2) %>%
   summarise(count = n(), .groups = 'drop') %>%
   arrange(desc(count)) %>%
   rename(ACTOR1 = ACT1, ACTOR2 = ACT2)
 
-p_alluvial <- ggplot(data_count, aes(axis1 = ACTOR1, axis2 = ACTOR2, y = log(count))) +
+p_alluvial <- ggplot(df_act_inter, aes(axis1 = ACTOR1, axis2 = ACTOR2, y = log(count))) +
   geom_alluvium(aes(fill = ACTOR1)) +
   geom_stratum() +
   geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 2, angle = 90) +
@@ -888,13 +888,13 @@ p_alluvial <- ggplot(data_count, aes(axis1 = ACTOR1, axis2 = ACTOR2, y = log(cou
 
 # stream events weekly ------------------------------------------------------------------------
 
-dstr <- acled %>%
+df_dist_evn_stream <- acled %>%
   mutate(EVENT_DATE = floor_date(EVENT_DATE, unit = 'week'), EVENT_DATE = as.Date(EVENT_DATE)) %>%
   group_by(EVENT_DATE, EVENT_TYPE_SRT) %>%
   summarise(total = n(), .groups = 'drop') %>%
   ungroup()
 
-p_stream_evn <- ggplot(dstr, aes(x = EVENT_DATE, y = total, fill = EVENT_TYPE_SRT)) +
+p_stream_evn <- ggplot(df_dist_evn_stream, aes(x = EVENT_DATE, y = total, fill = EVENT_TYPE_SRT)) +
   geom_stream() +
   scale_fill_manual(values = pal.zata) +
   scale_x_date(breaks = seq(as.Date("2015-01-01"), as.Date("2023-12-31"), 

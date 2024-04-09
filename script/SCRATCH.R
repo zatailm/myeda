@@ -58,7 +58,7 @@ ts_data_monthly <- ts(apply(matrix(ts_data, nrow = 4), 2, mean), frequency = 12)
 
 
 
-ts_data_monthly <- monthly.ts[,1]
+ts_data_monthly <- df_monthly[,1]
 # Decompose the time series
 decomposed <- decompose(ts_data_monthly)
 
@@ -98,7 +98,7 @@ p.seamon <- ggplot(decomposed_df, aes(x = Date)) +
   theme_minimal()
 
 
-ts_data_monthly <- monthly.ts[, 1]
+ts_data_monthly <- df_monthly[, 1]
 decomposed <- decompose(ts_data_monthly)
 
 n <- length(ts_data_monthly)
@@ -198,8 +198,8 @@ p_pacf <- p.autocor(pacf_est, pdata, 'PACF')
 spec_analysis <- spec.pgram(tsx, plot = F)
 max_freq <- spec_analysis$freq[which.max(spec_analysis$spec)] # frekuensi tertinggi
 
-spec_data <- data.frame(frequency = spec_analysis$freq, spectrum = spec_analysis$spec)
-pspec <- ggplot(spec_data, aes(x = frequency, y = spectrum)) +
+df_spectrum <- data.frame(frequency = spec_analysis$freq, spectrum = spec_analysis$spec)
+pspec <- ggplot(df_spectrum, aes(x = frequency, y = spectrum)) +
   geom_line() +
   scale_y_continuous(trans = "log", breaks = trans_breaks("log", function(x) exp(x)),
                      labels = trans_format("log", math_format(10^.x))) +
@@ -208,7 +208,7 @@ pspec <- ggplot(spec_data, aes(x = frequency, y = spectrum)) +
 
 
 
-tsm <- monthly.ts[, 1]
+tsm <- df_monthly[, 1]
 lambda <- BoxCox.lambda(tsm)
 tsm <- BoxCox(tsm, lambda)
 decodfm <- stl(tsm, s.window = "periodic", robust = TRUE)
@@ -581,7 +581,7 @@ plot_outlier_effects <- function(x, args.lines.effects = list(type = "s", col = 
 ts_outliers <- tsoutliers(tsx)
 tsxc <- tsclean(tsx)
 tsmc <- tsclean(tsm)
-tsdc <- tsclean(daily.ts[,1])
+tsdc <- tsclean(ts_daily[,1])
 
 data <- tsxc
 fit_ARIMA <- function(data, p, d, q) {
@@ -1026,7 +1026,7 @@ rmse_es <- rmse(tsd, forecast_es)
 mape_es <- mape(tsd, forecast_es)
 
 # Menambahkan model ES ke dalam dataframe evaluasi
-ev <- data.frame(
+df_evaluate_models <- data.frame(
   Model = c("AR", "MA", "ARMA", "ARIMA", "Auto ARIMA", "ES"), 
   MSE = c(
     sapply(f, function(forecast) mse(tsd, forecast)), mse_es
@@ -1047,7 +1047,7 @@ ev <- data.frame(
 )
 
 # Menampilkan hasil evaluasi
-print(ev)
+print(df_evaluate_models)
 
 
 ###############################################################
@@ -1126,7 +1126,7 @@ plot(forecast)
 ts_outliers <- tsoutliers(tsx)
 tsxc <- tsclean(tsx)
 tsmc <- tsclean(tsm)
-tsdc <- tsclean(daily.ts[,1])
+tsdc <- tsclean(ts_daily[,1])
 
 tsxcc <- tso(tsxc)
 plot(tsxcc)
@@ -1162,7 +1162,7 @@ c <- decompose(tsm, type = 'additive')
 plot(c)
 
 
-tsdf <- weekly.df
+tsdf <- df_weekly
 cols_to_transform <- names(tsdf)[-1] 
 transformed.df <- tsdf
 transformed.df[, cols_to_transform] <- lapply(tsdf[, cols_to_transform], log1p)
@@ -1254,7 +1254,7 @@ plot(for.es)
 # Analisis Tren Jenis Konflik
 #
 
-tsdf <- weekly.df
+tsdf <- df_weekly
 cols_to_transform <- names(tsdf)[-1] 
 transformed.df <- tsdf
 transformed.df[, cols_to_transform] <- lapply(tsdf[, cols_to_transform], log1p)
@@ -1278,10 +1278,10 @@ df.m <- melt(dfp, measure.vars=c("Date", "y"))#
 ggplot(dfp, aes(index(dfp), y)) + geom_line()
 
 
-cols_to_transform <- names(weekly.df)[-1]
+cols_to_transform <- names(df_weekly)[-1]
 
-transformed.df <- weekly.df
-transformed.df[, cols_to_transform] <- lapply(weekly.df[, cols_to_transform], function(x) log1p(log1p(x)))
+transformed.df <- df_weekly
+transformed.df[, cols_to_transform] <- lapply(df_weekly[, cols_to_transform], function(x) log1p(log1p(x)))
 
 ggplot(transformed.df, aes(x = Date, y = EVENT)) + geom_line()
 
@@ -1795,18 +1795,18 @@ num_folds <- 5
 # This function splits the data into 'num_folds' folds
 library(caret)
 set.seed(123) # Set seed for reproducibility
-cv_indices <- createFolds(dataw$event, k = num_folds)
+cv_indices <- createFolds(df_datweek$event, k = num_folds)
 
 # Step 4: Perform cross-validation
 # Iterate over the folds and fit LOESS models on the training data
 # Evaluate the performance of each model on the corresponding validation data
 for (i in 1:num_folds) {
   # Split data into training and validation sets
-  train_data <- dataw[-cv_indices[[i]], ] # Training data
-  valid_data <- dataw[cv_indices[[i]], ]  # Validation data
+  train_data <- df_datweek[-cv_indices[[i]], ] # Training data
+  valid_data <- df_datweek[cv_indices[[i]], ]  # Validation data
   
   # Fit LOESS model on training data
-  loess_model <- loess(dataw$event ~ dataw$time, data = train_data)
+  loess_model <- loess(df_datweek$event ~ df_datweek$time, data = train_data)
   
   # Make predictions on validation data
   predicted_values <- predict(loess_model, newdata = valid_data$time)
@@ -2227,9 +2227,9 @@ Box.test(ts_data$value, lag = 10, type = "Ljung-Box")
 
 library(forecast)
 
-timedf <- weekly.df[, 1]
-datadf <- weekly.df[, 2]
-datats <- weekly.ts[, 1]
+timedf <- df_weekly[, 1]
+datadf <- df_weekly[, 2]
+datats <- ts_weekly[, 1]
 
 autoarima <- forecast::auto.arima(datats)
 autoplot(autoarima)
@@ -2237,8 +2237,8 @@ autoplot(autoarima)
 arima <- forecast::Arima(datats, order = c(2,2,3))
 autoplot(arima)
 
-y <- monthly.ts[, 1]
-linearts <- forecast::tslm(weekly.ts[, 1] ~ trend + season)
+y <- df_monthly[, 1]
+linearts <- forecast::tslm(ts_weekly[, 1] ~ trend + season)
 plot(forecast(linearts, h=100))
 
 bclambda <- forecast::BoxCox.lambda(datats)
@@ -2256,7 +2256,7 @@ deaths.fcast <- forecast(deaths.model, xreg=fourier(datats, K=5, h=36))
 autoplot(deaths.fcast) + xlab("Year")
 
 
-p <- ggplot(aes(x=time(weekly.ts[,1]), y=weekly.ts[,1]), data=weekly.ts[,1])
+p <- ggplot(aes(x=time(ts_weekly[,1]), y=ts_weekly[,1]), data=ts_weekly[,1])
 p <- p + geom_line()
 p + geom_forecast()
 
@@ -2266,24 +2266,24 @@ plot(forecast(fit))
 
 gghistogram(datats, add.kde=TRUE)
 
-ggmonthplot(monthly.ts[,1])
+ggmonthplot(df_monthly[,1])
 
-fit <- ets(monthly.ts[,1])
+fit <- ets(df_monthly[,1])
 plot(forecast(fit))
 
 fit <- stlf(datats)
 plot(forecast(fit))
 
-findfrequency(monthly.ts[,1])
+findfrequency(df_monthly[,1])
 
 
-fit <- tslm(monthly.ts[, 3:8] ~ trend)
+fit <- tslm(df_monthly[, 3:8] ~ trend)
 fcast <- forecast(fit, h=104)
 plot(fcast)
 autoplot(fcast)
 
 
-fit <- auto.arima(monthly.ts[,3:8])
+fit <- auto.arima(df_monthly[,3:8])
 
 ggtsbreaks <- function(x) {
   # Make x axis contain only whole numbers (e.g., years)
@@ -2311,7 +2311,7 @@ print(breakpoints)
 ts_outliers <- tsoutliers(tsx)
 tsxc <- tsclean(tsx)
 tsmc <- tsclean(tsm)
-tsdc <- tsclean(daily.ts[,1])
+tsdc <- tsclean(ts_daily[,1])
 
 ## Mencari nilai parameter terbaik
 
@@ -2623,7 +2623,7 @@ evaluate_model <- function(p, d, q) {
 ## 
 ## 
 
-tsdf <- weekly.df
+tsdf <- df_weekly
 cols_to_transform <- names(tsdf)[-1] 
 transformed.df <- tsdf
 transformed.df[, cols_to_transform] <- lapply(tsdf[, cols_to_transform], log1p)

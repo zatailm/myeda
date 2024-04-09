@@ -31,25 +31,25 @@ quarterly <- apply.quarterly(dtdumxts, FUN = colMeans)
 yearly    <- apply.yearly(dtdumxts, FUN = colMeans)
 
 # Ubah ke data frame untuk analisis tertentu
-daily.df      <- data.frame(Date = index(daily), coredata(daily))
-weekly.df     <- data.frame(Date = index(weekly), coredata(weekly))
+df_daily      <- data.frame(Date = index(daily), coredata(daily))
+df_weekly     <- data.frame(Date = index(weekly), coredata(weekly))
 monthly.df    <- data.frame(Date = index(monthly), coredata(monthly))
-quarterly.df  <- data.frame(Date = index(quarterly), coredata(quarterly))
-yearly.df     <- data.frame(Date = index(yearly), coredata(yearly))
+df_quarterly  <- data.frame(Date = index(quarterly), coredata(quarterly))
+df_yearly     <- data.frame(Date = index(yearly), coredata(yearly))
 
 # Konversi ke objek ts
-daily.ts      <- ts(daily, start = c(2015, 1), end = c(2023, 365), frequency = 365)
-weekly.ts     <- ts(weekly, start = c(2015, 1), frequency = 52)
-monthly.ts    <- ts(monthly, start = c(2015, 1), end = c(2023, 12), frequency = 12)
+ts_daily      <- ts(daily, start = c(2015, 1), end = c(2023, 365), frequency = 365)
+ts_weekly     <- ts(weekly, start = c(2015, 1), frequency = 52)
+df_monthly    <- ts(monthly, start = c(2015, 1), end = c(2023, 12), frequency = 12)
 quarterly.ts  <- ts(quarterly, start = c(2015, 1), end = c(2023, 4), frequency = 4)
 yearly.ts     <- ts(yearly, start = c(2015, 1), end = c(2023, 1), frequency = 1)
 
-daily.ts.log    <- do.call(ts.union, lapply(daily.ts, function(x) log1p(x)))
-weekly.ts.log   <- do.call(ts.union, lapply(weekly.ts, function(x) log1p(x)))
-monthly.ts.log  <- do.call(ts.union, lapply(monthly.ts, function(x) log1p(x)))
+ts_daily.log    <- do.call(ts.union, lapply(ts_daily, function(x) log1p(x)))
+ts_weekly.log   <- do.call(ts.union, lapply(ts_weekly, function(x) log1p(x)))
+df_monthly.log  <- do.call(ts.union, lapply(df_monthly, function(x) log1p(x)))
 quarterly.ts.log  <- do.call(ts.union, lapply(quarterly.ts, function(x) log1p(x)))
 yearly.ts.log  <- do.call(ts.union, lapply(yearly.ts, function(x) log1p(x)))
 
-weekly_event  <- weekly.df[, c('Date', 'n.EVENT')] %>% 
+weekly_event  <- df_weekly[, c('Date', 'n.EVENT')] %>% 
   rename(Events = n.EVENT) %>% as_tbl_time(index = Date)
-weekly.ts.event <- weekly.ts[, 'EVENT']
+ts_weekly.event <- ts_weekly[, 'EVENT']

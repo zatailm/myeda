@@ -10,7 +10,7 @@ ren <- c("EBAT" = "Battles",
 ts_data <- tsm
 
 ##------------------------------------------------------------------------------ TIMESERIES PLOT
-tday <- daily.ts[,1]
+tday <- ts_daily[,1]
 twek <- tsx
 pts <- function(x, y, z, v) {
   ggplot(data = x, aes(x = index(x), y = y)) +
@@ -28,8 +28,8 @@ ptdisp <- pday + space + pwek + layw2
 
 spec_analysis <- spec.pgram(tsx, spans = 10, kernel = "daniell", taper = 0.1, pad = 0, 
                             fast = TRUE, demean = FALSE, detrend = FALSE, plot = FALSE)
-spec_data <- data.frame(frequency = spec_analysis$freq, spectrum = spec_analysis$spec)
-p_spec <- ggplot(spec_data, aes(x = frequency, y = spectrum)) +
+df_spectrum <- data.frame(frequency = spec_analysis$freq, spectrum = spec_analysis$spec)
+p_spec <- ggplot(df_spectrum, aes(x = frequency, y = spectrum)) +
   geom_line(lwd = .3, color = zcol[2]) +
   scale_y_continuous(trans = "log", breaks = trans_breaks("log", function(x) exp(x)),
                      labels = trans_format("log", math_format(10^.x))) +
@@ -44,9 +44,9 @@ extract_acf_data <- function(x) {
 }
 
 acf_est <- acf(tsx, plot = FALSE)
-acf_data <- extract_acf_data(acf_est)
+df_acf <- extract_acf_data(acf_est)
 pacf_est <- pacf(tsx, plot = FALSE)
-pacf_data <- extract_acf_data(pacf_est)
+df_pacf <- extract_acf_data(pacf_est)
 
 p.autocor <- function(est, data, title) {
   ci <- qnorm((1 + .95) / 2) / sqrt(est$n.used)
@@ -58,16 +58,16 @@ p.autocor <- function(est, data, title) {
   return(p)
 }
 
-p_acf <- p.autocor(acf_est, acf_data, 'ACF') + labs(x = NULL)
-p_pacf <- p.autocor(pacf_est, pacf_data, 'PACF') + labs(x = 'Lag')
+p_acf <- p.autocor(acf_est, df_acf, 'ACF') + labs(x = NULL)
+p_pacf <- p.autocor(pacf_est, df_pacf, 'PACF') + labs(x = 'Lag')
 
 psap <- p_spec + space + (p_acf / space / p_pacf + layh2) + layw2
 
 ##----------------------------------------------------------------------------- BOX, HIST & DENS 
 
 phd <- ggplot(tsx, aes(tsx)) + labs(x = 'Event')
-dtsx <- data.frame(year = as.integer(time(tsx)), val = as.vector(tsx))
-pbx <- ggplot(dtsx, aes(x = factor(year), y = val)) + geom_boxplot(color = zcol[1]) +
+df_ts_week <- data.frame(year = as.integer(time(tsx)), val = as.vector(tsx))
+pbx <- ggplot(df_ts_week, aes(x = factor(year), y = val)) + geom_boxplot(color = zcol[1]) +
   labs(x = 'Year', y = 'Event')
 
 p.hist <- function(df, xtit) {
@@ -105,22 +105,22 @@ dec_dec <- dec$decompose
 dec_stl <- dec$stl$time.series
 dec_mstl <- dec$mstl
 
-dataw <- data.frame(time = time(tsx), event = tsx)
-dataw[['pwise']] <- predict(segmented(lm(event ~ time, data = dataw), seg.Z = ~ time))
-dataw[['loess']] <- predict(loess(event ~ time, data = dataw, span = 0.75))
-dataw[['deco']]  <- dec$decompose$trend
-dataw[['stl']]   <- dec$stl$time.series[, 'trend']
-dataw[['mstl']]  <- dec$mstl[, 'Trend']
+df_datweek <- data.frame(time = time(tsx), event = tsx)
+df_datweek[['pwise']] <- predict(segmented(lm(event ~ time, data = df_datweek), seg.Z = ~ time))
+df_datweek[['loess']] <- predict(loess(event ~ time, data = df_datweek, span = 0.75))
+df_datweek[['deco']]  <- dec$decompose$trend
+df_datweek[['stl']]   <- dec$stl$time.series[, 'trend']
+df_datweek[['mstl']]  <- dec$mstl[, 'Trend']
 
 ptrend <- function(value, cap, point = TRUE) {
   if (point) {
-    p <- ggplot(data = dataw, aes(x = time, y = event)) +
+    p <- ggplot(data = df_datweek, aes(x = time, y = event)) +
       geom_point(color = zcol[6], alpha = .5) + 
       geom_line(aes(y = value), color = zcol[1], lwd = .7) +
       scale_x_continuous(breaks = seq(2015, 2023, 2)) +
       labs(x = NULL, y = NULL, caption = cap)
   } else {
-    p <- ggplot(data = dataw, aes(x = time, y = event)) +
+    p <- ggplot(data = df_datweek, aes(x = time, y = event)) +
       geom_line(aes(y = value), color = zcol[1], lwd = .7) +
       scale_x_continuous(breaks = seq(2015, 2023, 2)) +
       labs(x = NULL, y = NULL, caption = cap)
@@ -128,11 +128,11 @@ ptrend <- function(value, cap, point = TRUE) {
   return(p)
 }
 
-pdex <- ptrend(dataw[, 'event'], 'Observed')
-pmva <- ptrend(dataw[, 'deco'], 'Moving Average')
-pstl <- ptrend(dataw[, 'stl'], 'STL (LOESS)')
-ploe <- ptrend(dataw[, 'loess'], 'LOESS (0.75)')
-ppws <- ptrend(dataw[, 'pwise'], 'Piecewise Linear')
+pdex <- ptrend(df_datweek[, 'event'], 'Observed')
+pmva <- ptrend(df_datweek[, 'deco'], 'Moving Average')
+pstl <- ptrend(df_datweek[, 'stl'], 'STL (LOESS)')
+ploe <- ptrend(df_datweek[, 'loess'], 'LOESS (0.75)')
+ppws <- ptrend(df_datweek[, 'pwise'], 'Piecewise Linear')
 
 p1 <- pdex + space + pmva + plot_layout(width = c(4.4, .2, 2))
 p2 <- pstl + space + ploe + space + ppws + plot_layout(width = c(2, .2, 2, .2, 2))
@@ -143,9 +143,9 @@ prmain <- ptrend(dec$stl$time.series[, 'remainder'], 'Remainder', point = FALSE)
 #
 
 tsb_df <- data.frame(Year = time(tsb), coredata(tsb[, 3:8]))
-smth.df <- tsb_df %>% pivot_longer(cols = -Year, names_to = "Var", values_to = "Value")
+df_smooth_mon <- tsb_df %>% pivot_longer(cols = -Year, names_to = "Var", values_to = "Value")
 
-ptrent <- ggplot(smth.df, aes(x = Year, y = Value, color = Var)) +
+ptrent <- ggplot(df_smooth_mon, aes(x = Year, y = Value, color = Var)) +
   geom_point(color = zcol[6]) +
   geom_smooth(method = 'loess', formula = y ~ x, span = .25, color = 'black', 
               fill = zcol[6], alpha =  0.2, lwd = .7, se = F) +
@@ -163,18 +163,18 @@ psea <- ggseasonplot(tsm, year.labels = F, polar = T) +
 ptm <- ggmonthplot(tsm) + labs(x = NULL, y = NULL)
 ptlag <- gglagchull(tsm) + labs(x = NULL, y = NULL)
 
-dfy <- data.frame(Year = rep(2015:2023, each = ceiling(467/9), length.out = 467), Value = tsx)
-dfm <- data.frame(Month = factor(rep(month.abb, length.out = length(tsm)), levels = month.abb),
+df_yer_evn <- data.frame(Year = rep(2015:2023, each = ceiling(467/9), length.out = 467), Value = tsx)
+df_mon_evn <- data.frame(Month = factor(rep(month.abb, length.out = length(tsm)), levels = month.abb),
                   Value = c(tsm))
-dfw <- data.frame(Week = rep(1:51, each = ceiling(467/51), length.out = 467), Value = tsx)
+df_wek_evn <- data.frame(Week = rep(1:51, each = ceiling(467/51), length.out = 467), Value = tsx)
 
 pboxsea <- function(data, time) {
-  if (identical(data, dfw)) {
+  if (identical(data, df_wek_evn)) {
     p <- ggplot(data = data, aes(x = factor({{time}}), y = Value)) +
       geom_boxplot(lwd = 0.3, color = my_cols[1]) +
       labs(title = NULL, x = colnames(data)[1], y = colnames(data)[2]) +
       scale_x_discrete(labels = function(x) ifelse(as.numeric(x) %% 4 == 0, x, ""))
-  } else if (identical(data, dfy)) {
+  } else if (identical(data, df_yer_evn)) {
     p <- ggplot(data = data, aes(x = factor({{time}}), y = Value)) +
       geom_boxplot(lwd = 0.3, color = my_cols[1]) +
       labs(title = NULL, x = colnames(data)[1], y = colnames(data)[2])
@@ -186,9 +186,9 @@ pboxsea <- function(data, time) {
   return(p)
 }
 
-pbseay <- pboxsea(dfy, dfy[,1])
-pbseam <- pboxsea(dfm, dfm[,1])
-pbseaw <- pboxsea(dfw, dfw[,1])
+pbseay <- pboxsea(df_yer_evn, df_yer_evn[,1])
+pbseam <- pboxsea(df_mon_evn, df_mon_evn[,1])
+pbseaw <- pboxsea(df_wek_evn, df_wek_evn[,1])
 pbs <- ptm / pbseam
 pseason <- (psea + plot_layout(guides = 'keep') & theme(legend.position = 'right')) | pbs + layw2
 
@@ -235,11 +235,11 @@ rb <- function(d, t) {
 
 tlist <- list()
 for (i in 3:8) {tlist[[i]] <- rb(tsb[,i], colnames(tsb)[i])$data}
-tbeast <- bind_rows(tlist)
+df_beast_breaks_type <- bind_rows(tlist)
 
 mlist <- list()
 for (i in 1:2) {mlist[[i]] <- rb(tsw[,i], colnames(tsw)[i])$data}
-mbeast <- bind_rows(mlist)
+df_beast_breaks <- bind_rows(mlist)
 
 scan.break <- function(x) {
   p <- ggplot(data = x, aes(x = time)) +
@@ -255,20 +255,20 @@ scan.break <- function(x) {
   p
 }
 
-pmbhere <- scan.break(mbeast) + 
+pmbhere <- scan.break(df_beast_breaks) + 
   facet_wrap(~ type, scales = 'free_y', labeller = labeller(type = c(
     'EVENT' = 'Events', 'FATAL' = 'Fatalities')))
-ptbhere <- scan.break(tbeast) + 
+ptbhere <- scan.break(df_beast_breaks_type) + 
   facet_wrap(~ type, scales = 'free_y', labeller = labeller(type = ren))
 
 #
 
-breakm_df <- mbeast %>% filter(type == 'EVENT')
-datel <- mbeast %>% filter(type == 'EVENT') %>% filter(isbreak == 'Yes')
+df_breakpoints <- df_beast_breaks %>% filter(type == 'EVENT')
+df_beast_breaks_evn <- df_beast_breaks %>% filter(type == 'EVENT') %>% filter(isbreak == 'Yes')
 
 sdat <- as.Date("2015-01-03")
-year <- as.integer(datel$time)
-day <- as.integer((datel$time - year) * 365)
+year <- as.integer(df_beast_breaks_evn$time)
+day <- as.integer((df_beast_breaks_evn$time - year) * 365)
 bdate <- sdat + lubridate::years(year - 2015) + lubridate::days(day)
 
 hasil <- c()
@@ -281,23 +281,23 @@ for (i in bdate) {
   
 }
 hasil <- gsub(" ", "", hasil)
-datel$week_str = hasil
+df_beast_breaks_evn$week_str = hasil
 
-pstrbrk <- ggplot(breakm_df, aes(x = time)) +
+pstrbrk <- ggplot(df_breakpoints, aes(x = time)) +
   geom_point(aes(y = data), color = zcol[6], alpha = .5) +
   geom_line(aes(y = trend), color = 'black', lwd = .7) +
-  geom_vline(data = datel, aes(xintercept = time), linetype = "longdash", 
+  geom_vline(data = df_beast_breaks_evn, aes(xintercept = time), linetype = "longdash", 
              color = zcol[1], lwd = .7) +
   geom_area(aes(y = cpoc * 5.5), fill = zcol[2], alpha = .5) +
   scale_x_continuous(breaks = seq(2015, 2023, 2)) +
   scale_y_continuous(sec.axis = sec_axis(~ . * .5, name = 'Probability')) +
-  ggplot2::annotate(geom = "label", x = datel$time[1], y =  max(breakm_df$data)-.5,
+  ggplot2::annotate(geom = "label", x = df_beast_breaks_evn$time[1], y =  max(df_breakpoints$data)-.5,
                     label = paste(hasil[1]), vjust = .5, hjust = .5,
                     color = zcol[1], size = 2.5, fill = 'white') +
-  ggplot2::annotate(geom = "label", x = datel$time[2], y = max(breakm_df$data)-.5,
+  ggplot2::annotate(geom = "label", x = df_beast_breaks_evn$time[2], y = max(df_breakpoints$data)-.5,
                     label = paste(hasil[2]), vjust = .5, hjust = .5,
                     color = zcol[1], size = 2.5, fill = 'white') +
-  ggplot2::annotate(geom = "label", x = datel$time[3], y = max(breakm_df$data)-.5,
+  ggplot2::annotate(geom = "label", x = df_beast_breaks_evn$time[3], y = max(df_breakpoints$data)-.5,
                     label = paste(hasil[3]), vjust = .5, hjust = .5,
                     color = zcol[1], size = 2.5, fill = 'white') +
   labs(title = NULL, x = 'Time', y = 'Value') 
@@ -307,14 +307,14 @@ pmainstrbrk <- space + pstrbrk + space + plot_layout(design = mod)
 
 ##------------------------------------------------------------------------- ANOMALIES & OUTLIERS
 
-wdf <- as_tibble(data.frame(Date = weekly.df$Date, Events = tsx))
-ano_dec <- wdf %>%
+df_weekly_ano <- as_tibble(data.frame(Date = df_weekly$Date, Events = tsx))
+df_anomalize <- df_weekly_ano %>%
   time_decompose(Events, method = "stl") %>%
   anomalize(remainder, method = "iqr") %>%
   time_recompose()
 
-anomaly_points <- ano_dec %>% filter(anomaly == "Yes")
-anodate <- unique(anomaly_points$Date)
+df_anomalies_point <- df_anomalize %>% filter(anomaly == "Yes")
+anodate <- unique(df_anomalies_point$Date)
 
 est_ano <- c()
 for (date in anodate) {
@@ -326,31 +326,31 @@ for (date in anodate) {
 }
 est_ano <- gsub(" ", "", est_ano)
 
-anly <- as_tibble(data.frame(Date = as.Date(anodate), here = est_ano))
-anodf <- ano_dec %>% left_join(anly, by = "Date") %>% rename(date = Date)
+df_ano_day_week <- as_tibble(data.frame(Date = as.Date(anodate), here = est_ano))
+df_anomalies_final <- df_anomalize %>% left_join(df_ano_day_week, by = "Date") %>% rename(date = Date)
 
-pano <- ggplot(anodf, aes(x = date, y = observed)) +
+pano <- ggplot(df_anomalies_final, aes(x = date, y = observed)) +
   geom_line(color = zcol[6]) +
   geom_ribbon(aes(ymin = recomposed_l1, ymax = recomposed_l2), fill = zcol[6], alpha = 0.1) +
-  geom_point(data = filter(anodf, anomaly == "Yes"), aes(color = anomaly), color = zcol[1]) +
+  geom_point(data = filter(df_anomalies_final, anomaly == "Yes"), aes(color = anomaly), color = zcol[1]) +
   scale_x_date(breaks = seq(as.Date('2015-01-03'), as.Date('2023-12-31'), by = '2 years'), 
                date_labels = '%Y') +
-  geom_text_repel(data = subset(anodf, anomaly == 'Yes'), aes(label = here), color = zcol[1], 
+  geom_text_repel(data = subset(df_anomalies_final, anomaly == 'Yes'), aes(label = here), color = zcol[1], 
                   size = 2.7, box.padding = .7) +
   labs(caption = 'Anomalies')
 
 #
 
-smthdf <- data.frame(lapply(weekly.df[, -1], log1p))
-smthdf$Date <- weekly.df$Date
-smthdf <- pivot_longer(smthdf, cols = -Date, names_to = "var", values_to = "val")
+df_smooth_type <- data.frame(lapply(df_weekly[, -1], log1p))
+df_smooth_type$Date <- df_weekly$Date
+df_smooth_type <- pivot_longer(df_smooth_type, cols = -Date, names_to = "var", values_to = "val")
 
-df1 <- filter(smthdf, var == 'EBAT')
-df2 <- filter(smthdf, var == 'EERV')
-df3 <- filter(smthdf, var == 'EPRT')
-df4 <- filter(smthdf, var == 'ERTS')
-df5 <- filter(smthdf, var == 'ESTR')
-df6 <- filter(smthdf, var == 'EVAC')
+df_bat <- filter(df_smooth_type, var == 'EBAT')
+df_erv <- filter(df_smooth_type, var == 'EERV')
+df_prt <- filter(df_smooth_type, var == 'EPRT')
+df_rts <- filter(df_smooth_type, var == 'ERTS')
+df_str <- filter(df_smooth_type, var == 'ESTR')
+df_vac <- filter(df_smooth_type, var == 'EVAC')
 
 scn.ano <- function(df) {
   df %>%
@@ -359,18 +359,18 @@ scn.ano <- function(df) {
     time_recompose()
 }
 
-anotypdf <- bind_rows(
-  scn.ano(df1), scn.ano(df2), scn.ano(df3), scn.ano(df4), scn.ano(df5), scn.ano(df6)
+df_anomalies_types <- bind_rows(
+  scn.ano(df_bat), scn.ano(df_erv), scn.ano(df_prt), scn.ano(df_rts), scn.ano(df_str), scn.ano(df_vac)
 )
 
-anotypdf$type <- rep(c("EBAT", "EERV", "EPRT", "ERTS", "ESTR", "EVAC"), each = nrow(df1))
-anomaly_data <- anotypdf %>% filter(anomaly == "Yes")
+df_anomalies_types$type <- rep(c("EBAT", "EERV", "EPRT", "ERTS", "ESTR", "EVAC"), each = nrow(df_bat))
+df_anomalies_yes <- df_anomalies_types %>% filter(anomaly == "Yes")
 
-panot <- anotypdf %>%
+panot <- df_anomalies_types %>%
   ggplot(aes(x = Date, y = observed)) +
   geom_line(color = zcol[6]) +
   facet_wrap(~type, scales = "free_y", labeller = labeller(type = ren)) +
-  geom_point(data = anomaly_data, aes(x = Date, y = observed), color = zcol[1]) +
+  geom_point(data = df_anomalies_yes, aes(x = Date, y = observed), color = zcol[1]) +
   geom_ribbon(aes(ymin = recomposed_l1, ymax = recomposed_l2), fill = zcol[6], alpha = 0.1) +
   scale_x_date(breaks = seq(as.Date('2015-01-03'), as.Date('2023-12-31'), by = '2 years'), 
                date_labels = '%Y') +
@@ -380,7 +380,7 @@ panot <- anotypdf %>%
 #
 
 outliers <- tso(tsx)
-odf <- data.frame(
+df_outliers <- data.frame(
   time = time(outliers$y),
   date = time(outliers$y),
   obs = outliers$y,
@@ -389,20 +389,20 @@ odf <- data.frame(
   outliers = ifelse(time(outliers$y) %in% outliers$times, TRUE, FALSE)
 )
 
-otl <- data.frame(time = outliers$outliers$time, type = outliers$outliers$type)
-otl$time <- as.character(otl$time)
-oy <- as.integer(sub(":.*", "", otl$time))
-ow <- as.integer(sub(".*:", "", otl$time))
-otl$time <- oy + (ow - 1) / 52
-odf$time <- as.character(odf$time)
-otl$time <- as.character(otl$time)
-odf <- odf %>% left_join(otl, by = "time")
+df_typeof_outliers <- data.frame(time = outliers$outliers$time, type = outliers$outliers$type)
+df_typeof_outliers$time <- as.character(df_typeof_outliers$time)
+oy <- as.integer(sub(":.*", "", df_typeof_outliers$time))
+ow <- as.integer(sub(".*:", "", df_typeof_outliers$time))
+df_typeof_outliers$time <- oy + (ow - 1) / 52
+df_outliers$time <- as.character(df_outliers$time)
+df_typeof_outliers$time <- as.character(df_typeof_outliers$time)
+df_outliers <- df_outliers %>% left_join(df_typeof_outliers, by = "time")
 
-pout <- ggplot(odf, aes(x = date, y = obs)) +
+pout <- ggplot(df_outliers, aes(x = date, y = obs)) +
   geom_line(color = zcol[11]) +
   geom_line(aes(y = obadj), color = zcol[6]) +
-  geom_point(data = subset(odf, outliers == TRUE), color = zcol[1]) +
-  geom_text_repel(data = subset(odf, outliers == TRUE), aes(label = type), color = zcol[1], 
+  geom_point(data = subset(df_outliers, outliers == TRUE), color = zcol[1]) +
+  geom_text_repel(data = subset(df_outliers, outliers == TRUE), aes(label = type), color = zcol[1], 
                   size = 2.7, box.padding = .6) +
   scale_x_continuous(breaks = seq(2015, 2023, 2)) +
   labs(caption = 'Outliers')
@@ -416,7 +416,7 @@ panout <- pano + space + pout + layw2 & xlab(NULL) & ylab(NULL)
 ts_outliers <- tsoutliers(tsx)
 tsxc <- tsclean(tsx)
 tsmc <- tsclean(tsm)
-tsdc <- tsclean(daily.ts[,1])
+tsdc <- tsclean(ts_daily[,1])
 
 # Inisiasi parameter terbaik
 
@@ -515,7 +515,7 @@ f <- lapply(list(ar, ma, arma, ari, auto_ari), function(model) {
   forecast(model, h = length(tsd))$mean
 })
 
-ev <- data.frame(
+df_evaluate_models <- data.frame(
   Model = c("AR", "MA", "ARMA", "ARIMA", "Auto ARIMA"), 
   MSE = sapply(f, function(forecast) mse(tsd, forecast)), 
   RMSE = sapply(f, function(forecast) rmse(tsd, forecast)), 
@@ -523,11 +523,11 @@ ev <- data.frame(
   Accuracy = sapply(f, function(forecast) accuracy(tsd, forecast)),
   'CV MSE' = c(cv(ar, td), cv(ma, td), cv(arma, td), cv(ari, td), cv(auto_ari, td))
 )
-colnames(ev) <- gsub("\\.", " ", colnames(ev))
-colnames(ev)[colnames(ev) == "MAPE    "] <- paste("MAPE (%)", sep = "")
-ev[] <- lapply(ev, function(x) if(is.numeric(x)) round(x, 3) else x)
+colnames(df_evaluate_models) <- gsub("\\.", " ", colnames(df_evaluate_models))
+colnames(df_evaluate_models)[colnames(df_evaluate_models) == "MAPE    "] <- paste("MAPE (%)", sep = "")
+df_evaluate_models[] <- lapply(df_evaluate_models, function(x) if(is.numeric(x)) round(x, 3) else x)
 
-# print(ev)
+# print(df_evaluate_models)
 
 # Analisis residu
 residuals_autoarima <- residuals(auto_ari)

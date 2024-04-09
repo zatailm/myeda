@@ -41,5 +41,5 @@ compare <- function(data, clean = TRUE) {
   return(p)
 }
 
-p_raw <- compare(do.scan(dataraw), clean = FALSE)
+p_raw <- compare(do.scan(df_acled_raw), clean = FALSE)
 p_clean <- compare(do.scan(acled))
