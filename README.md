@@ -1,46 +1,27 @@
-# Analisis Data Konflik ACLED untuk Indonesia
+# Analisis Eksploratif Konflik di Indonesia (2015-2023): Kajian Data ACLED
 
-## Gambaran Umum
+MAZ Ilmam
 
-Proyek ini bertujuan untuk menganalisis data konflik yang terjadi di Indonesia dari 1 Januari 2015 hingga 31 Desember 2023 menggunakan data dari Armed Conflict Location & Event Data Project (ACLED). Analisis ini bertujuan untuk mengeksplorasi pola, tren, dan karakteristik konflik yang terjadi di Indonesia selama periode waktu tersebut. Proyek ini akan dilakukan dengan menggunakan bahasa pemrograman R.
+Repositori ini berisi sumber R Markdown untuk laporan penelitian "Analisis Eksploratif Konflik di Indonesia (2015-2023): Kajian Data ACLED" atau artikel ilmiah yang bersumber dari laporan tersebut yang akan diterbitkan di jurnal ilmiah yang relevan setelah proyek ini dinyatakan selesai.
 
-## Deskripsi
+Proyek ini bertujuan untuk menganalisis data konflik yang terjadi di Indonesia dari 1 Januari 2015 hingga setidaknya 31 Desember 2023 menggunakan data dari Armed Conflict Location & Event Data Project (ACLED). Analisis ini bertujuan untuk mengeksplorasi pola, tren, dan karakteristik konflik yang terjadi di Indonesia selama periode waktu tersebut. Proyek ini akan dilakukan dengan menggunakan bahasa pemrograman R. 
 
 Analisis data konflik ACLED untuk Indonesia memiliki beberapa langkah utama:
-
+  
 1. **Pemrosesan Data**: Data ACLED akan diimpor dan dimuat ke dalam lingkungan R untuk diproses dan dipersiapkan sebelum analisis dimulai.
-
 2. **Eksplorasi Data**: Data akan dieksplorasi untuk memahami distribusi spasial dan temporal dari konflik, termasuk jumlah kejadian, jenis konflik, lokasi, dan lainnya.
-
 3. **Analisis Statistik**: Berbagai teknik analisis statistik akan diterapkan untuk mengidentifikasi pola, tren, dan faktor-faktor yang berkaitan dengan konflik di Indonesia.
-
 4. **Visualisasi**: Hasil analisis akan divisualisasikan dalam bentuk grafik, peta, dan visualisasi lainnya untuk membantu memahami dan mengkomunikasikan temuan-temuan.
 
-## Persyaratan
-
-Untuk menjalankan proyek ini, Anda memerlukan:
-
-- R 4.3.3 atau versi yang lebih baru
-- RStudio 2023.12.1 Build 402 atau versi yang lebih baru
-
-## Penggunaan
-
-1. Unduh atau salin repositori ini ke komputer Anda.
-2. Buka proyek di RStudio.
-3. Jalankan skrip R secara berurutan untuk memproses data, melakukan analisis, dan menghasilkan visualisasi.
-4. Lihat hasil analisis dan visualisasi untuk memahami data konflik ACLED di Indonesia.
-
-## Kontribusi
-
-Anda dapat berkontribusi pada proyek ini dengan cara:
-
-1. Melaporkan bug atau masalah baru.
-2. Memberikan saran atau perbaikan untuk kode atau analisis.
-3. Mengirimkan permintaan tarik dengan peningkatan atau tambahan fitur.
+Anda dapat berkontribusi pada proyek ini dengan cara melaporkan bug, ketidakakuratan atau masalah lain, memberikan saran atau perbaikan untuk kode atau analisis, dan mengirimkan permintaan tarik. Jika Anda melakukan yang terakhir, dalam pesan komit Anda, harap tambahkan kalimat "Saya memberikan hak cipta kontribusi ini kepada MAZ Ilmam".
 
 ## Lisensi
 
-Proyek ini dilisensikan di bawah [MIT License](LICENSE).
+Karya ini dilisensikan di bawah Lisensi [Atribusi-NonKomersial-TanpaTurunan 4.0 Internasional](https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.id).
+
+## Disclaimer
+
+Ini adalah repositori pribadi yang saat ini tidak dimaksudkan untuk penggunaan publik. Repositori ini berfungsi sebagai tempat penyimpanan sumber R Markdown untuk laporan penelitian. Ini disediakan "sebagaimana adanya", tanpa jaminan jenis apapun, eksplisit atau tersirat, termasuk namun tidak terbatas pada jaminan keberhasilan, kesesuaian untuk tujuan tertentu, dan non-pelanggaran. Tidak akan ada pemasangan atau dukungan teknis yang disediakan.
 
 ## Kontak
 
