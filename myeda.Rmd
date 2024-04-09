@@ -313,7 +313,7 @@ Untuk menentukan model mana yang terbaik, kita perlu mempertimbangkan beberapa m
 Hasil perhitungan terhadap beberapa komponen metrik di atas untuk setiap model yang diuji dapat dilihat pada Tabel \ref{tab:evaltbl} di bawah ini:
 
 ```{r evaltbl, echo=FALSE}
-kbl(ev, caption = "Hasil Evaluasi Model Forecasting", booktabs = T) %>%
+kbl(df_evaluate_models, caption = "Hasil Evaluasi Model Forecasting", booktabs = T) %>%
 kable_styling(latex_options = c("striped", "hold_position"))
 ```
 
