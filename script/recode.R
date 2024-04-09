@@ -1,5 +1,6 @@
 ##----load_data---------------------------------------------
-acled <- read_excel('data/IDN2015-2023.xlsx')
+acled <- readRDS('data/acled-idn-15-23.rds')
+# acled <- read_excel('data/IDN2015-2023.xlsx')
 dataraw <- acled
 acled <- acled[,-c(1,4,5,9,12,15:18,25:27,30,31)]
 idn1 <- readRDS('data/IDN38.rds')
