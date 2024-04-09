@@ -16,3 +16,17 @@ save_data <- function(data_list) {
 
 save_data(data_frames)
 
+# export all functions into single file -------------------------------------------------------
+
+functions <- all_objects[sapply(all_objects, function(x) typeof(get(x))) == "closure"]
+
+file_path <- "script/functions.R"
+file_conn <- file(file_path, open = "w")
+
+for (func_name in functions) {
+  func_def <- deparse(get(func_name))
+  writeLines(paste("# Fungsi:", func_name), file_conn)
+  writeLines(func_def, file_conn)
+}
+
+close(file_conn)

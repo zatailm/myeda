@@ -21,7 +21,7 @@ Karya ini dilisensikan di bawah Lisensi [Atribusi-NonKomersial-TanpaTurunan 4.0 
 
 ## Disclaimer
 
-Ini adalah repositori pribadi yang saat ini tidak dimaksudkan untuk penggunaan publik. Repositori ini berfungsi sebagai tempat penyimpanan sumber R Markdown untuk laporan penelitian. Ini disediakan "sebagaimana adanya", tanpa jaminan jenis apapun, eksplisit atau tersirat, termasuk namun tidak terbatas pada jaminan keberhasilan, kesesuaian untuk tujuan tertentu, dan non-pelanggaran. Tidak akan ada pemasangan atau dukungan teknis yang disediakan.
+Ini adalah repositori pribadi yang saat ini tidak dimaksudkan untuk penggunaan publik. Repositori ini berfungsi sebagai tempat penyimpanan sumber R Markdown untuk laporan penelitian. Repositori ini disediakan "sebagaimana adanya", tanpa jaminan jenis apapun, eksplisit atau tersirat, termasuk namun tidak terbatas pada jaminan keberhasilan, kesesuaian untuk tujuan tertentu, dan tidak ada jaminan atau tanggung jawab yang diberikan terhadap kemungkinan bahwa penggunaan repositori tersebut melanggar hukum atau peraturan tertentu. Tidak akan ada pemasangan atau dukungan teknis yang disediakan oleh penyedia repositori.
 
 ## Kontak
 
