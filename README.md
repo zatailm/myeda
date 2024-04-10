@@ -4,7 +4,7 @@ MAZ Ilmam
 
 ![Data](data/barevfat.png)
 
-Repositori ini berisi sumber R Markdown untuk laporan penelitian "Analisis Eksploratif Konflik di Indonesia (2015-2023): Kajian Data ACLED" atau artikel ilmiah yang bersumber dari laporan tersebut yang akan diterbitkan di jurnal ilmiah yang relevan setelah proyek ini dinyatakan selesai.
+Repositori ini berisi sumber R Markdown untuk mempersiapkan laporan penelitian "Analisis Eksploratif Konflik di Indonesia (2015-2023): Kajian Data ACLED" atau artikel ilmiah yang bersumber dari laporan tersebut yang akan diterbitkan di jurnal ilmiah yang relevan setelah proyek ini dinyatakan selesai.
 
 Proyek ini bertujuan untuk menganalisis data konflik yang terjadi di Indonesia dari 1 Januari 2015 hingga setidaknya 31 Desember 2023 menggunakan data dari Armed Conflict Location & Event Data Project (ACLED). Analisis ini bertujuan untuk mengeksplorasi pola, tren, dan karakteristik konflik yang terjadi di Indonesia selama periode waktu tersebut. Proyek ini akan dilakukan dengan menggunakan bahasa pemrograman R. 
 
@@ -23,7 +23,7 @@ Karya ini dilisensikan di bawah Lisensi [Atribusi-NonKomersial-TanpaTurunan 4.0 
 
 ## Disclaimer
 
-Ini adalah repositori pribadi yang saat ini tidak dimaksudkan untuk penggunaan publik. Repositori ini berfungsi sebagai tempat penyimpanan sumber R Markdown untuk laporan penelitian. Repositori ini disediakan "sebagaimana adanya", tanpa jaminan jenis apapun, eksplisit atau tersirat, termasuk namun tidak terbatas pada jaminan keberhasilan, kesesuaian untuk tujuan tertentu, dan tidak ada jaminan atau tanggung jawab yang diberikan terhadap kemungkinan bahwa penggunaan repositori tersebut melanggar hukum atau peraturan tertentu. Tidak akan ada pemasangan atau dukungan teknis yang disediakan oleh penyedia repositori.
+Ini adalah repositori pribadi yang saat ini tidak dimaksudkan untuk penggunaan publik. Repositori ini berfungsi sebagai tempat penyimpanan sumber R Markdown untuk laporan penelitian. Repositori ini disediakan "sebagaimana adanya", tanpa jaminan jenis apapun, eksplisit atau tersirat, termasuk namun tidak terbatas pada jaminan keberhasilan, kesesuaian untuk tujuan tertentu, dan tidak ada jaminan atau tanggung jawab yang diberikan terhadap kemungkinan bahwa penggunaan repositori ini melanggar hukum atau peraturan tertentu. Tidak akan ada pemasangan atau dukungan teknis yang disediakan oleh penyedia repositori.
 
 ## Kontak
 
