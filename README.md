@@ -2,6 +2,8 @@
 
 MAZ Ilmam
 
+![Data](data/barevfat.png)
+
 Repositori ini berisi sumber R Markdown untuk laporan penelitian "Analisis Eksploratif Konflik di Indonesia (2015-2023): Kajian Data ACLED" atau artikel ilmiah yang bersumber dari laporan tersebut yang akan diterbitkan di jurnal ilmiah yang relevan setelah proyek ini dinyatakan selesai.
 
 Proyek ini bertujuan untuk menganalisis data konflik yang terjadi di Indonesia dari 1 Januari 2015 hingga setidaknya 31 Desember 2023 menggunakan data dari Armed Conflict Location & Event Data Project (ACLED). Analisis ini bertujuan untuk mengeksplorasi pola, tren, dan karakteristik konflik yang terjadi di Indonesia selama periode waktu tersebut. Proyek ini akan dilakukan dengan menggunakan bahasa pemrograman R. 
