@@ -17,3 +17,6 @@ packages <- c(
   'ggalluvial', 'shadowtext', 'ggstream')
 
 load_mypkg(packages)
+
+# Note:
+#   some package has conflicts
