@@ -57,12 +57,12 @@ knitr::opts_chunk$set(cache=TRUE, fig.pos='H', echo=FALSE, fig.dpi=300,
 
 ```{r mainprep, message=FALSE, warning=FALSE, include=FALSE, cache=TRUE}
 source("script/libraries.R", local = knitr::knit_global())
-source("script/recode.R", local = knitr::knit_global())
+source("script/main-preprocessing.R", local = knitr::knit_global())
 source("script/theme.R", local = knitr::knit_global())
-source("script/pretsanalysis.R", local = knitr::knit_global())
-source("script/ts.R", local = knitr::knit_global())
+source("script/preparing-timeseries-data.R", local = knitr::knit_global())
+source("script/timeseries.R", local = knitr::knit_global())
 source("script/distribution.R", local = knitr::knit_global())
-source("script/numericdf.R", local = knitr::knit_global())
+source("script/calculate-numeric-data.R", local = knitr::knit_global())
 source("script/correlation.R", local = knitr::knit_global())
 ```
 
@@ -398,9 +398,21 @@ p_adm_evt_fat
 source("script/wc-compare-common-year.R")
 ```
 
+```{r evnfathisto, fig.cap='', fig.dpi=300, fig.height=2.3, fig.width=7.48}
+p_hist_evn_fat
+```
+
 ### **Jenis Konflik dan Korban Jiwa**
 
 #### **Sebaran Setiap Jenis Konflik**
+
+```{r fig.dpi=300, fig.height=5.5, fig.width=7.48}
+p_his_type
+```
+
+```{r fig.cap='', fig.dpi=300, fig.height=2.3, fig.width=7.48}
+p_lol_stat
+```
 
 ```{r streamtype, echo=FALSE, fig.cap='Grafik Evolusi Data Jenis Konflik Sepanjang Waktu Pengamatan', fig.dpi=300, fig.height=1.833, fig.width=7.48, message=FALSE, warning=FALSE}
 p_stream_evn
