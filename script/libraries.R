@@ -14,7 +14,7 @@ packages <- c(
   'ggfortify', 'magrittr', 'tseries', 'stats', 'caret', 'ggraph', 'ranger', 'xts',
   'tidygraph', 'xgboost', 'pdp', 'fmsb', 'MASS', 'splines', 'ggrepel', 'segmented', 
   'anomalize', 'stats', 'trend', 'tibbletime', 'Rbeast', 'tsoutliers', 'gt', 'kableExtra',
-  'ggalluvial', 'shadowtext', 'ggstream')
+  'ggalluvial', 'shadowtext', 'ggstream', 'ggstatsplot')
 
 load_mypkg(packages)
 

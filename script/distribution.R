@@ -933,7 +933,7 @@ p_interaction <- df_intr %>%
     panel.grid.major.x = element_blank(),
     legend.position = "none"
   ) +
-  labs(x = "Type of Interactions", y = "Total (x1000)", caption = "Square root scaled bar")
+  labs(x = "Type of Interactions", y = "Total (x100)", caption = "Square root scaled bar")
 
 # wordcloud: filtered -------------------------------------------------------------------------
 
@@ -1052,7 +1052,7 @@ p_stream_evn <- ggplot(df_dist_evn_stream, aes(x = EVENT_DATE, y = total, fill =
 px <- ggplot(acled) +
   aes(x = YEAR, y = EVENT_TYPE, fill = EVENT_TYPE) +
   geom_boxplot() +
-  scale_fill_brewer(palette = "Dark2", direction = 1) +
+  scale_fill_zata() +
   theme_minimal()
 
 py <- ggplot(df_prv_geo) +
@@ -1067,3 +1067,111 @@ pz <- ggplot(acled) +
   geom_violin(adjust = 1L, scale = "area") +
   scale_fill_hue(direction = 1) +
   theme_minimal()
+
+# distribution with statistical detail --------------------------------------------------------
+
+create.hist <- function(data, value, binwidth, sc) {
+  stat <- gghistostats(data = data, x = value, binwidth = binwidth, type = 'nonparametric')
+  sub <- stat %>% extract_subtitle()
+  cap <- stat %>% extract_caption()
+  
+  p <- ggplot(data, aes(x = value)) +
+    geom_histogram(binwidth = binwidth, color = 'white', fill = zcol[6]) +
+    geom_density(aes(y = sc * after_stat(count)), color = zcol[2], size = 0.8, adjust = 2) +
+    geom_vline(xintercept = mean(data$value), linetype = 'dashed', color = zcol[1], lwd = 0.8) +
+    ggplot2::annotate(geom = 'text', x = mean(data$value), y = Inf,
+                      label = paste('mean: ', round(mean(data$value), 2)),
+                      vjust = 2, hjust = -0.1, size = 3) +
+    scale_y_continuous(labels = function(x) as.character(x / 1000 * 10),
+      sec.axis = sec_axis(
+        trans  = ~ . / nrow(data),
+        labels = function(x) paste0(x * 100),
+        name   = "Proportion (%)"
+      )
+    ) +
+    theme(panel.border = element_blank(), plot.title.position = 'plot', plot.caption.position = 'plot') +
+    labs(
+      x = 'Number of Records',
+      y = 'Count (x 100)',
+      # subtitle = sub,
+      caption = sub)
+  
+  return(p)
+}
+
+df_evn_fat_stats <- acled %>%
+  group_by(EVENT_DATE) %>%
+  summarise(evn = n(), fat = sum(FATALITIES), .groups = 'drop') %>%
+  pivot_longer(cols = c(evn, fat),
+               names_to = "variable",
+               values_to = "value")
+
+p_hist_evn <- create.hist(
+  filter(df_evn_fat_stats, variable == 'evn'), value, 2.05, 1.5) + labs(title = 'Events')
+p_hist_fat <- create.hist(
+  filter(df_evn_fat_stats, variable == 'fat'), value, 4, 1.5) + labs(title = 'Fatalities')
+p_hist_evn_fat <- p_hist_evn + space + p_hist_fat + plot_layout(width = c(5, .2, 5))
+
+
+df_types_stats <- acled %>%
+  group_by(EVENT_DATE, EVENT_TYPE_SRT) %>%
+  summarise(value = n(), .groups = 'drop') %>%
+  rename(date = EVENT_DATE, type = EVENT_TYPE_SRT)
+
+p_hist_bat <- create.hist(
+  filter(df_types_stats, type == 'Battles'), value, .1, .5) + labs(title = 'Battles') +
+  theme(plot.caption = element_text(size = 6), plot.margin = margin(0, 10, 20, 0))
+p_hist_prt <- create.hist(
+  filter(df_types_stats, type == 'Protests'), value, 2.05, 1.5) + labs(title = 'Protests') +
+  theme(plot.caption = element_text(size = 6), plot.margin = margin(0, 0, 20, 10))
+p_hist_rts <- create.hist(
+  filter(df_types_stats, type == 'Riots'), value, 2, 1.5) + labs(title = 'Riots') +
+  theme(plot.caption = element_text(size = 6), plot.margin = margin(0, 10, 20, 0))
+p_hist_vac <- create.hist(
+  filter(df_types_stats, type == 'VAC'), value, .5, .5) + labs(title = 'Violence against civilians') +
+  theme(plot.caption = element_text(size = 6), plot.margin = margin(0, 0, 20, 10))
+p_hist_dev <- create.hist(
+  filter(df_types_stats, type == 'Str.Dev.'), value, .5, .5) + labs(title = 'Strategic developments') +
+  theme(plot.caption = element_text(size = 6), plot.margin = margin(0, 10, 0, 0))
+p_hist_erv <- create.hist(
+  filter(df_types_stats, type == 'ERV'), value, .1, .5) + labs(title = 'Explosions/Remote violence') +
+  theme(plot.caption = element_text(size = 6), plot.margin = margin(0, 0, 0, 10))
+
+p_his_type <- wrap_plots(p_hist_bat, p_hist_prt, p_hist_rts, p_hist_vac, p_hist_dev, p_hist_erv) + plot_layout(ncol = 2)
+
+
+# lollipop with statistical detail ------------------------------------------------------------
+
+create.loll <- function(data, var, value) {
+  stat <- ggdotplotstats(data = {{data}}, y = {{var}}, x = {{value}}, type = 'nonparametric')
+  sub <- stat %>% extract_subtitle()
+  cap <- stat %>% extract_caption()
+  
+  p <- data %>%
+    ggplot(aes(x = reorder({{var}}, value), y = value)) +
+    geom_segment(aes(x = {{var}}, xend = {{var}}, y = 0, yend = value), color = zcol[3]) +
+    geom_point(color = zcol[3], size = 3) +
+  geom_hline(yintercept = median(data$value), linetype = 'dashed', color = zcol[1], lwd = 0.8) +
+  ggplot2::annotate(geom = 'text', x = 2, y = median(data$value),
+                    label = paste('median: ', round(median(data$value), 2)),
+                    vjust = 2, hjust = -0.1, size = 3) +
+  labs(caption = sub) +
+  theme(panel.border = element_blank(), plot.title.position = 'plot') +
+  coord_flip()
+  
+  return(p)
+}
+
+df_dot_type <- acled %>%
+  group_by(EVENT_TYPE_SRT) %>%
+  summarise(evn = n(), fat = sum(FATALITIES)) %>%
+  pivot_longer(cols = c(evn, fat),
+               names_to = "variable",
+               values_to = "value")
+
+p_lol_evn_stat <- create.loll(filter(df_dot_type, variable == "evn"), EVENT_TYPE_SRT, value) +
+  labs(x = NULL, y = 'Events', title = 'Event Types')
+p_lol_fat_stat <- create.loll(filter(df_dot_type, variable == "fat"), EVENT_TYPE_SRT, value) +
+  labs(x = NULL, y = 'Fatalities', title = 'Fatalities')
+
+p_lol_stat <- p_lol_evn_stat + space + p_lol_fat_stat + layw2
