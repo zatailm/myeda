@@ -21,6 +21,14 @@ Anda dapat berkontribusi pada proyek ini dengan cara melaporkan bug, ketidakakur
 
 Karya ini dilisensikan di bawah Lisensi [Atribusi-NonKomersial-TanpaTurunan 4.0 Internasional](https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.id).
 
+## Kemungkinan Pertanyaan yang Muncul
+
+**1. Mengapa Anda tidak menampilkan/menyertakan kode skrip?**
+Kode skrip belum ditampilkan karena masih dalam proses penyusunan, perbaikan, dan pengembangan. 
+
+**2. Apakah Anda akan menyertakan kode skrip? Kapan?**
+Ya, saya akan menyertakan kode skrip begitu proses penyusunan, perbaikan, dan pengembangan selesai dan kode tersebut telah siap untuk dibagikan. Saya berkomitmen untuk memberikan kode yang berkualitas dan dapat dipercaya, dan akan memastikan untuk menyertakan kode tersebut pada saat yang tepat.
+
 ## Disclaimer
 
 Ini adalah repositori pribadi yang saat ini tidak dimaksudkan untuk penggunaan publik. Repositori ini berfungsi sebagai tempat penyimpanan sumber R Markdown untuk laporan penelitian. Repositori ini disediakan "sebagaimana adanya", tanpa jaminan jenis apapun, eksplisit atau tersirat, termasuk namun tidak terbatas pada jaminan keberhasilan, kesesuaian untuk tujuan tertentu, dan tidak ada jaminan atau tanggung jawab yang diberikan terhadap kemungkinan bahwa penggunaan repositori ini melanggar hukum atau peraturan tertentu. Tidak akan ada pemasangan atau dukungan teknis yang disediakan oleh penyedia repositori.
