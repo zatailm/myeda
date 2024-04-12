@@ -59,6 +59,7 @@ knitr::opts_chunk$set(cache=TRUE, fig.pos='H', echo=FALSE, fig.dpi=300,
 source("script/libraries.R", local = knitr::knit_global())
 source("script/main-preprocessing.R", local = knitr::knit_global())
 source("script/theme.R", local = knitr::knit_global())
+source("script/theme-zata.R", local = knitr::knit_global())
 source("script/preparing-timeseries-data.R", local = knitr::knit_global())
 source("script/timeseries.R", local = knitr::knit_global())
 source("script/distribution.R", local = knitr::knit_global())
@@ -547,7 +548,7 @@ Dengan memahami pola spasial clustering dari konflik ini, pemangku kepentingan d
 Matriks korelasi antar jenis konflik (Gambar \ref{fig:cortype}) berfungsi sebagai alat analisis untuk mengeksplorasi dan mengukur sejauh mana hubungan saling memengaruhi antar berbagai jenis konflik. Dengan mengevaluasi korelasi antar variabel-variabel konflik, matriks ini memberikan wawasan tentang sejauh mana perubahan dalam satu jenis konflik dapat berkaitan dengan perubahan dalam jenis konflik lainnya. Analisis ini dapat membantu mengidentifikasi pola dan dinamika kompleks yang mendasari konflik, memberikan dasar untuk memahami interaksi antar variabel.
 
 ```{r cortype, echo=FALSE, fig.cap='Korelasi antar Jenis Konflik', fig.dpi=300, fig.height=2.667, fig.width=7.48, message=FALSE, warning=FALSE}
-p_cor_con2
+p_cor_type
 ```
 
 Dari hasil analisis korelasi, sejumlah temuan menarik dapat diidentifikasi. Terdapat korelasi positif yang tinggi antara frekuensi *Battles* dan aktivitas *Strategic developments*, dalam hal ini mencapai nilai 0.6, yang mengindikasikan bahwa peningkatan salah satu dari jenis konflik tersebut mempengaruhi peningkatan konflik satu sama lain. Selain itu, frekuensi *Protests* dan *riots* menunjukkan korelasi positif yang tinggi (0.7), menandakan bahwa peningkatan *protes* dapat berkorelasi signifikan dengan peningkatan *riots* atau sebaliknya.

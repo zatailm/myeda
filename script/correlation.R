@@ -118,6 +118,14 @@ p_cor_con2 <- ggcorrplot(
     legend.key.height = unit(10, "mm"), legend.key.width = unit(3, "mm")
   )
 
+p_cor_type <- ggcorrmat(data     = df_cofa,
+          colors   = c(zcol[2], "white", zcol[1]),
+          matrix.type = 'lower',
+          ggcorrplot.args = list(lab_size = 2.5)
+) + 
+  theme_zata(border = FALSE, x_title = FALSE, y_title = FALSE) +
+  theme(legend.text = element_text(size = 6))
+
 # admin and event types -----------------------------------------------------------------------
 
 p_dis_evn <- acled %>%
