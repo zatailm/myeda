@@ -21,4 +21,4 @@ load_mypkg(packages)
 # Note:
 #   Some package has conflicts with another package.
 
-theme_set(theme_zata)
+theme_set(theme_zata())
