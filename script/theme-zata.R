@@ -6,6 +6,7 @@ theme_zata <- function(base_size = 9, base_family = '',
                        x_grid    = TRUE,
                        y_grid    = TRUE,
                        leg_pos   = 'right',
+                       leg_jus   = 'center',
                        x_title   = TRUE,
                        y_title   = TRUE,
                        strip_bg  = 'gray90',
@@ -27,40 +28,23 @@ theme_zata <- function(base_size = 9, base_family = '',
   
   half_line  <- base_size / 2
   small_size <- rel_small * base_size
-
+  
   if (border) {
     panel_border <- element_rect(color = 'black', fill = NA)
   } else {
     panel_border <- element_blank()
   }
-
+  
   if (x_grid) {
-    x_grid <- element_line(linewidth = rel(.5), color = 'gray90')
+    x_grid <- element_line(linewidth = rel(.5), linetype = 'dashed', color = 'gray90')
   } else {
     x_grid <- element_blank()
   }
   
   if (y_grid) {
-    y_grid <- element_line(linewidth = rel(.5), color = 'gray90')
+    y_grid <- element_line(linewidth = rel(.5), linetype = 'dashed', color = 'gray90')
   } else {
     y_grid <- element_blank()
-  }
-  
-  if (leg_pos == 'top') {
-    leg_pos <- 'top'
-    leg_jus <- 'left'
-  } else if (leg_pos == 'bottom') {
-    leg_pos <- 'bottom'
-    leg_jus <- 'right'
-  } else if (leg_pos == 'right') {
-    leg_pos <- 'right'
-    leg_jus <- 'center'
-  } else if (leg_pos == 'left') {
-    leg_pos <- 'left'
-    leg_jus <- 'center'
-  } else {
-    leg_pos <- 'none'
-    leg_jus <- 'center'
   }
   
   if (tit_jus == 'left') {
@@ -180,7 +164,6 @@ theme_zata <- function(base_size = 9, base_family = '',
     
     panel.background   = element_blank(),
     panel.border       = panel_border,
-    panel.grid         = element_blank(),
     panel.grid.major.x = x_grid,
     panel.grid.minor.x = NULL,
     panel.grid.major.y = y_grid,
@@ -204,11 +187,11 @@ theme_zata <- function(base_size = 9, base_family = '',
     strip.switch.pad.wrap = unit(half_line / 2, 'pt'),
     
     plot.background       = element_rect(color = 'white'),
-    plot.title            = element_text(face = 'bold', size = rel(rel_large), 
-                                         hjust = tit_jus, vjust = 1, 
+    plot.title            = element_text(face = 'bold', size = rel(rel_large),
+                                         hjust = tit_jus, vjust = 1,
                                          margin = margin(b = half_line)),
     plot.title.position   = tit_pos,
-    plot.subtitle         = element_text(size = rel(rel_small), hjust = tit_jus, vjust = 1, 
+    plot.subtitle         = element_text(size = rel(rel_small), hjust = tit_jus, vjust = 1,
                                          margin = margin(b = half_line)),
     plot.caption          = element_text(size = rel(rel_tiny), hjust = cap_jus, vjust = 1,
                                          margin = margin(t = half_line)),
@@ -236,6 +219,8 @@ zcol <- c(
   '#E41A1C', '#377EB8', '#4DAF4A', '#FF7F00', '#AD2A8E', '#f1c40f',
   '#99445E', '#0d0887', '#616161', '#990000', '#bdbdbd'
 )
+
+my_cols <- c("#00AFBB", "#E7B800", "#FC4E07")
 
 scale_fill_zata <- function(...) {
   discrete_scale('fill', 'classic', manual_pal(values = pal.zata), ...)

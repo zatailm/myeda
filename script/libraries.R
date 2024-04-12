@@ -14,9 +14,11 @@ packages <- c(
   'ggfortify', 'magrittr', 'tseries', 'stats', 'caret', 'ggraph', 'ranger', 'xts',
   'tidygraph', 'xgboost', 'pdp', 'fmsb', 'MASS', 'splines', 'ggrepel', 'segmented', 
   'anomalize', 'stats', 'trend', 'tibbletime', 'Rbeast', 'tsoutliers', 'gt', 'kableExtra',
-  'ggalluvial', 'shadowtext', 'ggstream', 'ggstatsplot')
+  'ggalluvial', 'shadowtext', 'ggstream', 'ggstatsplot', 'themezata')
 
 load_mypkg(packages)
 
 # Note:
-#   some package has conflicts
+#   Some package has conflicts with another package.
+
+theme_set(theme_zata)

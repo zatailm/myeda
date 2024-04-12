@@ -30,3 +30,11 @@ for (func_name in functions) {
 }
 
 close(file_conn)
+
+
+# export plot ---------------------------------------------------------------------------------
+
+png(filename = "barevfat.png", width = 7.48, height = 2.667, units = "in", res = 300)
+print(p_compare_reg)
+dev.off()
+
