@@ -120,18 +120,18 @@ scale_color_zata <- function(...) {
   discrete_scale("color", "classic", manual_pal(values = pal.zata), ...)
 }
 
-theme_set(theme_zvis_grid(9) +
-  theme(
-    panel.border = element_rect(linewidth = rel(1), color = "black"),
-    panel.grid.major = element_line(linetype = "dashed"),
-    axis.ticks.length = unit(.2, "cm"),
-    axis.ticks = element_line(color = "black"),
-    plot.title = element_text(size = 8),
-    panel.spacing = unit(1, "lines"),
-    axis.title = element_text(size = 8),
-    legend.position = "top",
-    legend.justification = "right"
-  ))
+# theme_set(theme_zvis_grid(9) +
+#   theme(
+#     panel.border = element_rect(linewidth = rel(1), color = "black"),
+#     panel.grid.major = element_line(linetype = "dashed"),
+#     axis.ticks.length = unit(.2, "cm"),
+#     axis.ticks = element_line(color = "black"),
+#     plot.title = element_text(size = 8),
+#     panel.spacing = unit(1, "lines"),
+#     axis.title = element_text(size = 8),
+#     legend.position = "top",
+#     legend.justification = "right"
+#   ))
 
 zcol <- c(
   "#E41A1C", "#377EB8", "#4DAF4A", "#FF7F00", "#AD2A8E", "#f1c40f",
@@ -147,6 +147,7 @@ scalefilzt <- function(...) {
 
 space <- plot_spacer()
 layw2 <- plot_layout(width = c(5, .5, 5))
+layw2s <- plot_layout(width = c(5, .25, 5))
 layw3 <- plot_layout(width = c(5, .25, 5, .25, 5))
 layh2 <- plot_layout(height = c(5, .5, 5))
 layh3 <- plot_layout(height = c(5, .25, 5, .35, 5))

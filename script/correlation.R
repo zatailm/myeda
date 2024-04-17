@@ -55,16 +55,17 @@ plot_mcmoran <- function(res, br, col, title = "") {
       y = 1, label = paste(round(moran_statistic, 2)),
       size = 2.5, hjust = 0, vjust = 0, fontface = "italic", color = "#2e0595"
     ) +
-    labs(x = "Moran's I", y = "Density", title = title) +
     scale_x_continuous(breaks = br) +
-    scale_y_continuous(expand = expansion(mult = c(0, 0.01)))
+    scale_y_continuous(expand = expansion(mult = c(0, 0.01))) +
+    theme(plot.title = element_text(size = 8), panel.border = element_blank()) +
+    labs(x = "Moran's I", y = "Density", title = title)
 
   return(p)
 }
 
 p_moran_evn <- plot_mcmoran(result_evt, x_evt, "#2c728e", "Events")
 p_moran_fat <- plot_mcmoran(result_fat, x_fat, "#d8576b", "Fatalities")
-p_moran <- p_moran_evn + space + p_moran_fat + layw2
+p_moran <- p_moran_evn + space + p_moran_fat + layw2s
 
 ## Plot moran
 
@@ -89,17 +90,51 @@ plot.moran <- function(df_spatial, variable, listw, title) {
     ) +
     scale_y_continuous(expand = expansion(mult = c(.07, .2))) +
     labs(x = variable, y = "Spatially lagged", title = title) +
-    theme(axis.title = element_blank())
+    theme(panel.border = element_blank(), axis.title = element_blank(),
+          plot.title = element_text(size = 8))
   return(p)
 }
 
 # df_sf_evn dan df_sf_fat sebagai dasar df_f_mod didefinisikan di distribution
 p_mpe <- plot.moran(df_sf_evn, "n", result_evt$lw, "Events")
 p_mpf <- plot.moran(df_f_mod, "n", result_fat$lw, "Fatalities")
-p_moranp <- p_mpe + space + p_mpf + layw2
+p_moranp <- p_mpe + space + p_mpf + layw2s
 
 # event type correlation ----------------------------------------------------------------------
 
+align_legend <- function(p, hjust = 0.5)
+{
+  # extract legend
+  g <- cowplot::plot_to_gtable(p)
+  grobs <- g$grobs
+  legend_index <- which(sapply(grobs, function(x) x$name) == "guide-box")
+  legend <- grobs[[legend_index]]
+  
+  # extract guides table
+  guides_index <- which(sapply(legend$grobs, function(x) x$name) == "layout")
+  
+  # there can be multiple guides within one legend box  
+  for (gi in guides_index) {
+    guides <- legend$grobs[[gi]]
+    
+    # add extra column for spacing
+    # guides$width[5] is the extra spacing from the end of the legend text
+    # to the end of the legend title. If we instead distribute it by `hjust:(1-hjust)` on
+    # both sides, we get an aligned legend
+    spacing <- guides$width[5]
+    guides <- gtable::gtable_add_cols(guides, hjust*spacing, 1)
+    guides$widths[6] <- (1-hjust)*spacing
+    title_index <- guides$layout$name == "title"
+    guides$layout$l[title_index] <- 2
+    
+    # reconstruct guides and write back
+    legend$grobs[[gi]] <- guides
+  }
+  
+  # reconstruct legend and write back
+  g$grobs[[legend_index]] <- legend
+  g
+}
 
 df_cofa <- df_monthly_num[, c(4:9)] %>%
   set_names(c("Battles", "ERV", "Protests", "Riots", "Str.Dev.", "VAC"))
@@ -118,21 +153,24 @@ p_cor_con2 <- ggcorrplot(
     legend.key.height = unit(10, "mm"), legend.key.width = unit(3, "mm")
   )
 
-p_cor_type <- ggcorrmat(data     = df_cofa,
-          colors   = c(zcol[2], "white", zcol[1]),
-          matrix.type = 'lower',
-          ggcorrplot.args = list(lab_size = 2.5)
-) + 
-  theme_zata(border = FALSE, x_title = FALSE, y_title = FALSE) +
-  theme(legend.text = element_text(size = 6))
+p_cor_type <- ggcorrmat(data = df_cofa, colors = c(zcol[2], "white", zcol[1]), 
+                        matrix.type = 'lower',
+                        ggcorrplot.args = list(lab_size = 2.5)
+                        ) + 
+  theme(legend.text = element_text(size = 6), legend.title = element_text(size = 12),
+        axis.text.y = element_text(size = 8), 
+        axis.text.x = element_text(angle = 0, size = 8, hjust = .5, vjust = 1),
+        plot.caption.position = 'plot', plot.caption = element_text(hjust = .5),
+        legend.key.width = unit(5, 'pt'), legend.box.just = 'center')
 
+p_cor_type_leg <- ggdraw(align_legend(p_cor_type))
 # admin and event types -----------------------------------------------------------------------
 
 p_dis_evn <- acled %>%
   ggplot(aes(x = ADMIN1_ABR, y = fct_rev(EVENT_TYPE_SRT))) +
   geom_jitter(aes(color = EVENT_TYPE_SRT), size = .3, show.legend = FALSE) +
   scale_color_zata() +
-  theme(axis.text.x = element_text(hjust = .5)) +
+  theme(panel.border = element_blank()) +
   guides(color = guide_legend(nrow = 1)) +
   labs(x = NULL, y = NULL)
 

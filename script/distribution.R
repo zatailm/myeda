@@ -1,3 +1,4 @@
+
 # compare and plot ----------------------------------------------------------------------------
 
 do.scan <- function(data) {
@@ -38,26 +39,27 @@ compare <- function(data, clean = TRUE) {
     geom_text(aes(label = Count), hjust = -.2, size = 2.7) +
     scale_y_continuous(trans = "log1p", expand = expansion(mult = c(0, .2))) +
     scale_fill_zata() +
-    theme(
-      legend.position = "none", plot.title.position = "plot",
-      axis.text.x = element_blank(), axis.line.x = element_blank(),
-      panel.grid.major.x = element_blank()
-    ) +
     coord_flip()
   if (clean) {
-    p <- p + theme(axis.text.y = element_blank()) +
+    p <- p + 
+      theme(axis.text = element_blank(), axis.ticks.x = element_blank(), panel.grid.major.x = element_blank(),
+            legend.position = 'none') +
       labs(
         x = NULL, y = NULL, title = "Dataset Characteristics (Processed)",
         caption = "Logarithmic scaled bar"
       )
   } else {
-    p <- p + labs(x = NULL, y = NULL, title = "Dataset Characteristics (Pre-processed)")
+    p <- p + 
+      theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), panel.grid.major.x = element_blank(),
+            legend.position = 'none') +
+      labs(x = NULL, y = NULL, title = "Dataset Characteristics (Pre-processed)")
   }
   return(p)
 }
 
 p_raw <- compare(do.scan(df_acled_raw), clean = FALSE)
 p_clean <- compare(do.scan(acled))
+p_compare_char <- p_raw + p_clean
 
 # location map --------------------------------------------------------------------------------
 
@@ -66,8 +68,11 @@ map.loc <- function(layera, layerb, show_legend = TRUE, wrap = FALSE) {
     geom_sf(data = layera) +
     geom_sf(data = layerb, aes(color = EVENT_TYPE), size = 1, alpha = 0.2, show.legend = show_legend) +
     theme_void() +
-    theme(legend.position = ifelse(show_legend, "right", "none"), legend.title = element_text(size = 8)) +
-    scale_color_manual(name = "Event Type", values = pal.zata)
+    theme(legend.position = ifelse(show_legend, "right", "none"), strip.text = element_text(face = "bold", size = 8),
+          legend.text = element_text(size = 8, vjust = 1), legend.key.size = unit(.8, 'pt'),
+          legend.title = element_text(face = 'italic', size = 8), legend.key.spacing.y = unit(0.2, 'lines')) +
+    guides(color = guide_legend(override.aes = list(size = 3))) +
+    scale_color_manual(name = "Event Types", values = pal.zata)
   if (wrap) {
     p <- p + facet_wrap(~EVENT_TYPE, ncol = 3)
   }
@@ -136,53 +141,54 @@ p_geo_fat <- map.plot(
 # comparing event and fatalities plot ---------------------------------------------------------
 
 com.plot <- function(data, x, y1, y2, abr = TRUE) {
+  st_evn <- ggdotplotstats(data, y = {{x}}, x = {{y1}}, type = 'nonparametric') %>% extract_subtitle()
+  st_fat <- ggdotplotstats(data, y = {{x}}, x = {{y2}}, type = 'nonparametric') %>% extract_subtitle()
+  
+  me_evn <- substitute(Me[italic("Event")] == value, list(value = median(data[[deparse(substitute(y1))]])))
+  me_fat <- substitute(Me[italic("Fatalities")] == value, list(value = median(data[[deparse(substitute(y1))]])))
+  cap_com <- bquote(atop(.(me_evn) ~ ' || ' ~ .(me_fat), ~ "Events:" ~ .(st_evn) ~ ' || ' ~ "Fatalities:" ~ .(st_fat)))
+  # cap <- bquote("Events:" ~ .(cape) ~ ' || ' ~ "Fatalities:" ~ .(capf)) # 1 line
+  
   p <- data %>%
     ggplot(aes(x = {{ x }})) +
     geom_col(aes(y = sqrt({{ y1 }}), fill = "Events"), position = "identity", width = .6) +
     geom_col(aes(y = -sqrt({{ y2 }}), fill = "Fatalities"),
-      position = "identity",
-      width = .6
+             position = "identity",
+             width = .6
     ) +
     geom_text(aes(y = sqrt({{ y1 }}) + .1, label = {{ y1 }}),
-      position = "identity",
-      size = 2.5, hjust = -.3, vjust = .35, angle = 90
+              position = "identity",
+              size = 2.5, hjust = -.3, vjust = .4, angle = 90
     ) +
     geom_text(aes(y = -sqrt({{ y2 }}) - .1, label = {{ y2 }}),
-      position = "identity",
-      size = 2.5, hjust = 1.3, vjust = .35, angle = 90
+              position = "identity",
+              size = 2.5, hjust = 1.3, vjust = .4, angle = 90
     ) +
-    scale_y_continuous(expand = expansion(mult = c(.25, .35))) +
-    theme(
-      axis.text.y = element_blank(), axis.ticks.y = element_blank(),
-      axis.title.y = element_blank(), panel.border = element_blank(),
-      panel.grid.major.y = element_blank()
-    ) +
+    # geom_hline(yintercept = sqrt(median(data[[deparse(substitute(y1))]])), linetype = 'aa', color = 'red') +
+    # geom_hline(yintercept = -sqrt(median(data[[deparse(substitute(y2))]])), linetype = 'aa', color = 'blue') +
+    scale_y_continuous(expand = expansion(mult = c(.2, .25))) +
+    theme(panel.border = element_blank(), panel.grid.major.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_blank(),
+          axis.text.y = element_blank(), plot.caption = element_text(hjust = .5)) +
     scale_fill_manual(
       values = c("Events" = "#3e4a89", "Fatalities" = "#fca636"),
-      guide = guide_legend(title = NULL)
+      guide = guide_legend(title = 'Category')
     ) +
-    labs(x = l$prab, caption = "Square root scaled bar")
-
+    labs(x = l$prab, caption = cap_com)
+  
   if (abr) {
     return(p)
   } else {
-    p <- p + theme(axis.text.x = element_text(angle = 90, vjust = .35, hjust = 1))
+    p <- p + theme_zata(text.x.dir = 'vertical')
   }
   return(p)
 }
 
-df_event_adm <- acled %>%
+df_cum_evnfat <- acled %>%
   group_by(ADMIN1_ABR, ADMINID) %>%
-  count(ADMIN1_ABR)
-df_adm_fat <- acled %>%
-  group_by(ADMIN1_ABR, ADMINID) %>%
-  summarize(n = sum(FATALITIES), .groups = "drop") %>%
-  arrange(desc(n)) %>%
-  ungroup()
-df_comp_evnfat <- left_join(df_event_adm, df_adm_fat, by = c("ADMIN1_ABR", "ADMINID")) %>%
-  rename(Events = n.x, Fatalities = n.y)
+  summarise(Event = n(), Fatalities = sum(FATALITIES), .groups = 'drop') %>%
+  as.data.frame()
 
-p_compare_reg <- com.plot(data = df_comp_evnfat, x = ADMIN1_ABR, y1 = Events, y2 = Fatalities)
+p_compare_reg <- com.plot(data = df_cum_evnfat, x = ADMIN1_ABR, y1 = Event, y2 = Fatalities)
 
 # comparing events and fatalities based on cluster --------------------------------------------
 
@@ -220,24 +226,16 @@ p_compare_clust <- ggplot() +
   ) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   scale_fill_manual(values = c("High" = zcol[1], "Medium" = zcol[6], "Low" = zcol[3])) +
-  guides(fill = guide_legend(reverse = TRUE, title.position = "top", title = NULL)) +
   theme(
-    legend.position = "top", legend.justification = "right",
-    axis.text.y = element_blank(), axis.ticks.y = element_blank(),
-    panel.grid.major.y = element_blank(),
-    axis.title.y = element_text(hjust = 1),
+    panel.border = element_blank(), 
+    axis.title.y = element_text(hjust = 1), 
     axis.title.y.right = element_text(hjust = 1),
-    panel.border = element_blank()
-  ) +
-  xlab("Province (Abbreviation)") +
-  labs(y = "Event", y2 = "Fatalities") +
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    panel.grid.major.y = element_blank()) +
+  guides(fill = guide_legend(reverse = TRUE, title = 'Level', nrow = 1)) +
+  labs(x = l$prab, y = "Event", y2 = "Fatalities", caption = 'Square root scaled bar') +
   scale_y_continuous(expand = c(.25, .35), sec.axis = sec_axis(~ -., name = "Fatalities"))
-
-p_clust_evnfat <- p_compare_clust +
-  plot_annotation(
-    caption = "Square root scaled bar",
-    theme = theme(plot.title = element_text(size = 9))
-  )
 
 # distribution via scatter --------------------------------------------------------------------
 
@@ -245,8 +243,8 @@ scat.plot <- function(data, geom = "jitter", method = "density", axis_text = TRU
   if (geom == "jitter") {
     p <- ggplot(data, aes(x = factor(ADMIN1_ABR), y = EVENT_DATE)) +
       geom_jitter(aes(color = ADMIN1_ABR, fill = ADMIN1_ABR),
-        pch = 20,
-        position = position_jitter(0.2), cex = 1.2
+                  pch = 20,
+                  position = position_jitter(0.2), cex = 1.2
       )
   } else if (geom == "sina") {
     if (method == "density") {
@@ -265,7 +263,7 @@ scat.plot <- function(data, geom = "jitter", method = "density", axis_text = TRU
         )
     }
   }
-
+  
   p <- p +
     scale_color_viridis(option = "D", discrete = TRUE, begin = .2, end = .95) +
     scale_fill_viridis(option = "D", discrete = TRUE, begin = .2, end = .95) +
@@ -273,24 +271,30 @@ scat.plot <- function(data, geom = "jitter", method = "density", axis_text = TRU
       breaks = seq(from = min(data$EVENT_DATE), to = max(data$EVENT_DATE), by = "2 years"),
       date_labels = "%Y"
     ) +
-    theme(legend.position = "none", panel.border = element_blank())
-
+    theme(panel.border = element_blank(), axis.title.y = element_blank(), legend.position = 'none')
+  
   if (!axis_text) {
-    p <- p + theme(axis.text.x = element_blank()) +
-      theme(axis.title = element_blank())
+    p <- p + 
+      theme(panel.border = element_blank(), axis.text.x = element_blank(), axis.title = element_blank())
   } else {
-    p <- p + theme(axis.title.y = element_blank()) +
-      labs(x = "Province (Abbreviation)")
+    p <- p + 
+      theme(panel.border = element_blank(), axis.title.y = element_blank(), legend.position = 'none') +
+      labs(x = l$prab, caption = )
   }
-
+  
   return(p)
 }
 
-df_distr_adm_evn <- acled %>% mutate(ADMIN1_ABR = fct_rev(fct_infreq(ADMIN1_ABR)))
+df_distr_adm_evn <- acled %>% 
+  dplyr::select(EVENT_DATE, YEAR, ADMIN1_ABR) %>%
+  mutate(ADMIN1_ABR = fct_rev(fct_infreq(ADMIN1_ABR))) %>%
+  as.data.frame()
+
+cap_box <- ggbetweenstats(data = df_distr_adm_evn, x = ADMIN1_ABR, y = YEAR) %>% extract_subtitle() 
 
 p_disj <- scat.plot(df_distr_adm_evn, geom = "jitter", axis_text = FALSE)
 p_diss <- scat.plot(df_distr_adm_evn, geom = "sina", method = "density", axis_text = FALSE)
-p_disb <- scat.plot(df_distr_adm_evn, geom = "sina", method = "boxplot")
+p_disb <- scat.plot(df_distr_adm_evn, geom = "sina", method = "boxplot") + labs(caption = cap_box)
 p_dissc <- wrap_plots(p_disj, p_diss, p_disb, ncol = 1)
 
 # Heatmap -------------------------------------------------------------------------------------
@@ -299,7 +303,7 @@ create.heatmap <- function(data, xdat, ydat, value, viridis, numeric = FALSE, pa
   if (!all(c(xdat, ydat, value) %in% names(data))) {
     stop("Columns not found in data!")
   }
-
+  
   p <- data %>%
     ggplot(aes(x = !!sym(xdat), y = reorder(!!sym(ydat), !!sym(value)))) +
     geom_tile(aes(fill = !!sym(value)), color = "#000000", linewidth = 0.25) +
@@ -311,15 +315,10 @@ create.heatmap <- function(data, xdat, ydat, value, viridis, numeric = FALSE, pa
       guide = guide_colorbar(direction = "horizontal"),
       na.value = "#440154"
     ) +
-    theme(
-      legend.position = "top", legend.justification = "right",
-      legend.key.height = unit(1.5, "mm"), legend.key.width = unit(10, "mm"),
-      legend.title = element_text(size = 6), legend.text = element_text(size = 6),
-      legend.ticks = element_blank(), panel.border = element_blank(),
-      axis.text = element_text(size = 6),
-      axis.ticks.length = unit(1, "mm")
-    )
-
+    theme(legend.key.height = unit(1.5, "mm"), legend.key.width = unit(8, "mm"), 
+          axis.text.y = element_text(size = 6.5), legend.text = element_text(size = 6),
+          legend.box.spacing = unit(1.5, 'mm'), panel.border = element_blank())
+  
   if (numeric) {
     p <- p + scale_x_continuous(breaks = seq(0, 108, 4), expand = c(0, 0))
   } else {
@@ -344,8 +343,8 @@ df_heat_adm_evn <- acled %>%
 
 breaks1 <- as.Date(c("2019-09-01", "2020-10-01", "2022-09-01"))
 breaks2 <- seq(as.Date(min(df_heat_adm_evn$EVENT_DATE)) + months(3),
-  as.Date(max(df_heat_adm_evn$EVENT_DATE)),
-  by = "2 year"
+               as.Date(max(df_heat_adm_evn$EVENT_DATE)),
+               by = "2 year"
 )
 combined_breaks <- as.Date(union(breaks1, breaks2))
 
@@ -362,8 +361,8 @@ p_heat_evn <- create.heatmap(
   pass.scale = TRUE
 ) +
   scale_x_date(breaks = combined_breaks, date_labels = date_labels, expand = c(0, 0)) +
-  theme(axis.text.x = element_text(color = ccol)) +
-  labs(x = l$thn, y = NULL)
+  theme(axis.text.x = element_text(color = ccol, size = 7)) +
+  labs(x = 'Month-Year', y = NULL)
 
 df_heat_adm_fat <- acled %>%
   mutate(EVENT_DATE = floor_date(EVENT_DATE, unit = "month"), EVENT_DATE = as.Date(EVENT_DATE)) %>%
@@ -423,8 +422,9 @@ p.adm <- function(df, tit, xlab, event = TRUE) {
     geom_text(aes(label = freq), hjust = -.3, vjust = .5, size = 2.5) +
     scale_y_continuous(expand = expansion(mult = c(.01, .2))) +
     theme(
+      panel.border = element_blank(),
       axis.ticks.x = element_blank(), axis.text.x = element_blank(),
-      panel.grid.major.x = element_blank(), panel.border = element_blank()
+      panel.grid.major.x = element_blank(), plot.title = element_text(size = 8)
     ) +
     labs(title = tit, x = xlab, y = NULL) +
     coord_flip()
@@ -482,29 +482,29 @@ df_typ <- left_join(df_type_frq, df_type_fat, by = "EVENT_TYPE")
 
 p_typ <- df_typ %>%
   ggplot(aes(x = fct_rev(EVENT_TYPE))) +
-  geom_col(aes(y = sqrt(Fatalities), fill = "Total Fatalities"),
-    position = "identity", width = .5
+  geom_col(aes(y = sqrt(Fatalities), fill = "Fatalities"),
+           position = "identity", width = .5
   ) +
   geom_text(aes(y = sqrt(Fatalities) + 0.1, label = Fatalities),
-    position = "identity", size = 2.5, hjust = -0.3, vjust = .4
+            position = "identity", size = 2.5, hjust = -0.3, vjust = .4
   ) +
-  geom_col(aes(y = -sqrt(Event), fill = "Total Events"),
-    position = "identity", width = .5
+  geom_col(aes(y = -sqrt(Event), fill = "Events"),
+           position = "identity", width = .5
   ) +
   geom_text(aes(y = -sqrt(Event) - 0.1, label = Event),
-    position = "identity", size = 2.5, hjust = 1.3, vjust = .3
+            position = "identity", size = 2.5, hjust = 1.3, vjust = .3
   ) +
   scale_y_continuous(expand = expansion(mult = c(.15, .2))) +
   theme(
-    legend.position = "top", legend.justification = "right",
     axis.text.x = element_blank(), axis.ticks.x = element_blank(),
     panel.grid.major.x = element_blank(), axis.title = element_blank(),
     panel.border = element_blank()
   ) +
   scale_fill_manual(
-    values = c("Total Events" = "#3e4a89", "Total Fatalities" = "#fca636"),
+    values = c("Events" = "#3e4a89", "Fatalities" = "#fca636"),
     guide = guide_legend(title = NULL)
   ) +
+  guides(fill = guide_legend(title = 'Category')) +
   labs(x = l$prab, caption = "Square root scaled bar") +
   coord_flip()
 
@@ -512,14 +512,28 @@ p_typ <- df_typ %>%
 
 df_evttype_adm1 <- acled %>% count(ADMIN1_ABR, EVENT_TYPE_SRT)
 
+# df_tem <- acled %>% dplyr::select(ADMIN1_ABR, EVENT_TYPE_SRT) %>% as.data.frame()
+# cap_evty <- ggbarstats(data = df_tem, x = ADMIN1_ABR, y = EVENT_TYPE_SRT) %>% extract_subtitle()
+# so slow, so here the result (use bquote!):
+
+cap_evty <- bquote(
+  list(
+    chi["Pearson"]^2 * "(" * 185 * ")" == "5713.10",
+    italic(p) == "0.00",
+    hat(italic("V"))["Cramer"] == "0.27",
+    CI["95%"] ~ "[" * "0.26" * "," * "0.28" * "]",
+    italic("n")["obs"] == "14,657"
+  )
+)
+
 p_evt_adm1_prc <- df_evttype_adm1 %>%
   ggplot(aes(x = ADMIN1_ABR, y = n, fill = EVENT_TYPE_SRT)) +
   geom_col(width = .6, position = "fill") +
   scale_y_continuous(expand = expansion(mult = c(.02, .02)), labels = percent) +
   theme(panel.border = element_blank()) +
   scale_fill_zata() +
-  labs(x = "Province (Abbreviation)", y = NULL) +
-  guides(fill = guide_legend(nrow = 1, title = NULL, title.theme = element_text(size = 8)))
+  labs(x = "Province (Abbreviation)", y = NULL, caption = cap_evty) +
+  guides(fill = guide_legend(nrow = 1, title = 'Event Types', title.theme = element_text(size = 8)))
 
 df_con_ym <- acled %>%
   group_by(YEAR, MONTH, EVENT_TYPE_SRT, .drop = TRUE) %>%
@@ -555,13 +569,13 @@ df_con_y <- df_type_year %>%
 
 p_con_y <- df_con_y %>%
   ggplot(aes(x = factor(year), total)) +
-  geom_bar(stat = "identity", aes(fill = event), width = .5) +
+  geom_bar(stat = "identity", aes(fill = event), width = .6) +
   geom_text(
     stat = "summary",
     aes(angle = 90, label = after_stat(y), group = year),
     fun = sum, vjust = .3, hjust = -.5, size = 2.1
   ) +
-  scale_y_continuous(expand = expansion(mult = c(.02, .8))) +
+  scale_y_continuous(expand = expansion(mult = c(.02, .5))) +
   scale_fill_zata() +
   theme(
     axis.text.x = element_text(angle = 90, vjust = .4, size = 6),
@@ -619,7 +633,7 @@ create.ef <- function(df, tit, d = TRUE) {
     ) +
     labs(title = tit) +
     coord_flip()
-
+  
   if (d) {
     p <- p + scale_fill_viridis_c(option = "D", trans = "sqrt", begin = 0.05, end = 0.95)
   } else {
@@ -752,7 +766,7 @@ create.ef <- function(df, x, y, tit, d = TRUE) {
     ) +
     labs(title = tit) +
     coord_flip()
-
+  
   if (d) {
     p <- p + scale_fill_viridis_c(option = "D", trans = "sqrt", begin = 0.05, end = 0.95)
   } else {
@@ -800,20 +814,29 @@ df_subtype <- df_subtype %>% mutate(Sub = recode(as.character(subtype), !!!subbr
 df_subtype$Sub <- factor(df_subtype$Sub, levels = df_subtype$Sub[order(df_subtype$type)])
 
 p_subtype <- df_subtype %>%
-  ggplot(aes(x = fct_rev(reorder(Sub, Freq)), y = Freq, fill = as.factor(type))) +
+  ggplot(aes(x = reorder(Sub, type), y = Freq, fill = type)) +
   geom_bar(stat = "identity", position = "dodge", width = .6) +
-  geom_text(aes(y = Freq, label = Freq),
-    position = "identity",
-    size = 2.5, hjust = -.3, vjust = .3, angle = 90
-  ) +
-  scale_y_continuous(trans = "log", expand = expansion(mult = c(.01, .5))) +
+  geom_text(aes(y = Freq, label = Freq), position = "identity", size = 2.5, hjust = -.3, vjust = .3, angle = 90) +
+  geom_bracket(data = df_subtype, xmin = 1, xmax = 2, y.position = log(482*4^4), 
+               label = "Battles", label.size = 2.5, vjust = -.5) +
+  geom_bracket(data = df_subtype, xmin = 3, xmax = 6, y.position = log(12*4^3), 
+               label = paste("Explosions/\n","Remote violence"), label.size = 2.5, vjust = -.5) +
+  geom_bracket(data = df_subtype, xmin = 7, xmax = 9, y.position = log(10631*4^5), 
+               label = "Protests", label.size = 2.5, vjust = -.5) +
+  geom_bracket(data = df_subtype, xmin = 10, xmax = 11, y.position = log(1188*4^5), 
+               label = "Riots", label.size = 2.5, vjust = -.5) +
+  geom_bracket(data = df_subtype, xmin = 12, xmax = 17, y.position = log(217*4^4), 
+               label = "Strategic developments", label.size = 2.5, vjust = -.5) +
+  geom_bracket(data = df_subtype, xmin = 18, xmax = 20, y.position = log(716*4^4), 
+               label = paste("Violence\n", "against\n", "civilians"), label.size = 2.5, vjust = -.15) +
+  scale_y_continuous(trans = "log", expand = expansion(mult = c(.01, .2))) +
   scale_fill_zata() +
   theme(
     legend.position = "right", panel.border = element_blank(),
     panel.grid.major.y = element_blank(), axis.text.y = element_blank(),
     axis.ticks.y = element_blank(), axis.title.y = element_blank(),
-    axis.text.x = element_text(angle = 90, hjust = 1, vjust = .2),
-    plot.margin = unit(c(0, 60, 0, 60), "pt"),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    plot.margin = unit(c(0, 50, 0, 50), "pt"), legend.key.spacing.y = unit(0.2, 'lines'),
     plot.caption.position = "plot", legend.title = element_text(size = 8)
   ) +
   guides(fill = guide_legend(title = "Event Types", size = 5)) +
@@ -835,8 +858,8 @@ pnet <- ggraph(graph_data, layout = "auto") +
   geom_node_point(size = 4, color = zcol[1]) +
   scale_edge_width(range = c(0.2, 2)) +
   geom_node_text(aes(label = name),
-    color = "black", size = 2.5, repel = TRUE,
-    position = "identity"
+                 color = "black", size = 2.5, repel = TRUE,
+                 position = "identity"
   ) +
   scale_edge_width(range = c(0.1, 1)) +
   labs(edge_width = "Freq.") +
@@ -862,7 +885,8 @@ create.plactr <- function(df, x, y, opt, tit) {
     theme(
       legend.position = "none", panel.border = element_blank(),
       panel.grid.major.x = element_blank(), axis.text.x = element_blank(),
-      axis.ticks.x = element_blank(), axis.title = element_blank()
+      axis.ticks.x = element_blank(), axis.title = element_blank(), 
+      plot.title = element_text(size = 8)
     ) +
     labs(title = tit) +
     coord_flip()
@@ -882,9 +906,9 @@ df_act <- acled %>%
   rename(actors = ACT1, total = n) %>%
   filter(!is.na(actors)) %>%
   bind_rows(acled %>%
-    count(ACT2) %>%
-    rename(actors = ACT2, total = n) %>%
-    filter(!is.na(actors))) %>%
+              count(ACT2) %>%
+              rename(actors = ACT2, total = n) %>%
+              filter(!is.na(actors))) %>%
   group_by(actors) %>%
   summarize(total = sum(total)) %>%
   arrange(desc(total))
@@ -978,28 +1002,28 @@ prep.texts <- function(data, src.in, src, words, lab, rem.words) {
       dplyr::select({{ words }}) %>%
       mutate(labels = src)
   })
-
+  
   corp.list <- lapply(notes_list, function(x) VCorpus(VectorSource(toString(x))))
   corp.all <- corp.list[[1]]
   for (i in 2:length(src)) {
     corp.all <- c(corp.all, corp.list[[i]])
   }
-
+  
   corp.all <- tm_map(corp.all, content_transformer(tolower))
   corp.all <- tm_map(corp.all, removePunctuation)
   corp.all <- tm_map(corp.all, removeNumbers)
   corp.all <- tm_map(corp.all, function(x) removeWords(x, rem.words))
-
+  
   doc.tm <- TermDocumentMatrix(corp.all)
   doc.tm.mat <- as.matrix(doc.tm)
   colnames(doc.tm.mat) <- src
   doc.tm.clean <- removeSparseTerms(doc.tm, 0.8)
   doc.tm.clean.mat <- as.matrix(doc.tm.clean)
   colnames(doc.tm.clean.mat) <- src
-
+  
   index <- as.logical(sapply(rownames(doc.tm.clean.mat), function(x) (nchar(x) > 3)))
   result <- doc.tm.clean.mat[index, ]
-
+  
   return(result)
 }
 
@@ -1013,21 +1037,29 @@ df_act_inter <- df_filt_act12 %>%
   group_by(ACT1, ACT2) %>%
   summarise(count = n(), .groups = "drop") %>%
   arrange(desc(count)) %>%
-  rename(ACTOR1 = ACT1, ACTOR2 = ACT2)
+  rename('Actor 1' = ACT1, 'Actor 2' = ACT2, Level = count)
 
-p_alluvial <- ggplot(df_act_inter, aes(axis1 = ACTOR1, axis2 = ACTOR2, y = log(count))) +
-  geom_alluvium(aes(fill = ACTOR1)) +
-  geom_stratum() +
-  geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 2, angle = 90) +
-  scale_x_discrete(limits = c("ACTOR1", "ACTOR2"), expand = c(0.15, 0.05)) +
-  scale_fill_zata() +
-  theme(
-    plot.margin = unit(c(0, 0, 0, 0), "pt"), panel.border = element_blank(),
-    panel.grid.major = element_blank(), axis.text.x = element_blank(),
-    axis.ticks = element_blank(), axis.title = element_blank(),
-    legend.position = "none"
-  ) +
-  coord_flip()
+# p_alluvial <- ggplot(df_act_inter, aes(axis1 = ACTOR1, axis2 = ACTOR2, y = log(count))) +
+#   geom_alluvium(aes(fill = ACTOR1)) +
+#   geom_stratum() +
+#   geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 2, angle = 90) +
+#   scale_x_discrete(limits = c("ACTOR1", "ACTOR2"), expand = c(0.15, 0.05)) +
+#   scale_fill_zata() +
+#   theme(
+#     plot.margin = unit(c(0, 0, 0, 0), "pt"), panel.border = element_blank(),
+#     panel.grid.major = element_blank(), axis.text.x = element_blank(),
+#     axis.ticks = element_blank(), axis.title = element_blank(),
+#     legend.position = "none"
+#   ) +
+#   coord_flip()
+
+p_act_alluvial <- alluvial_wide(data = df_act_inter, stratum_label_size = 2.5, fill_by = 'first_variable') + 
+  scale_x_discrete(expand = expansion(mult = c(0,0))) +
+  theme(axis.text.x = element_text(angle = 0, hjust = .5, vjust = 1),
+        axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank(),
+        panel.border = element_blank()) +
+  labs(caption = paste('Levels of interaction\n', 'H-H: High - High, M-H: Medium - High, M: Medium,
+       M-L: Medium - Low, L-L: Low - Low'))
 
 # stream events weekly ------------------------------------------------------------------------
 
@@ -1041,7 +1073,7 @@ p_stream_evn <- ggplot(df_dist_evn_stream, aes(x = EVENT_DATE, y = total, fill =
   geom_stream() +
   scale_fill_manual(values = pal.zata) +
   scale_x_date(breaks = seq(as.Date("2015-01-01"), as.Date("2023-12-31"),
-    by = "2 year"
+                            by = "2 year"
   ), date_labels = "%Y") +
   theme(panel.border = element_blank(), legend.title = element_text(size = 8)) +
   guides(fill = guide_legend(nrow = 1)) +
@@ -1083,11 +1115,11 @@ create.hist <- function(data, value, binwidth, sc) {
                       label = paste('mean: ', round(mean(data$value), 2)),
                       vjust = 2, hjust = -0.1, size = 3) +
     scale_y_continuous(labels = function(x) as.character(x / 1000 * 10),
-      sec.axis = sec_axis(
-        trans  = ~ . / nrow(data),
-        labels = function(x) paste0(x * 100),
-        name   = "Proportion (%)"
-      )
+                       sec.axis = sec_axis(
+                         trans  = ~ . / nrow(data),
+                         labels = function(x) paste0(x * 100),
+                         name   = "Proportion (%)"
+                       )
     ) +
     theme(panel.border = element_blank(), plot.title.position = 'plot', plot.caption.position = 'plot') +
     labs(
@@ -1151,13 +1183,13 @@ create.loll <- function(data, var, value) {
     ggplot(aes(x = reorder({{var}}, value), y = value)) +
     geom_segment(aes(x = {{var}}, xend = {{var}}, y = 0, yend = value), color = zcol[3]) +
     geom_point(color = zcol[3], size = 3) +
-  geom_hline(yintercept = median(data$value), linetype = 'dashed', color = zcol[1], lwd = 0.8) +
-  ggplot2::annotate(geom = 'text', x = 2, y = median(data$value),
-                    label = paste('median: ', round(median(data$value), 2)),
-                    vjust = 2, hjust = -0.1, size = 3) +
-  labs(caption = sub) +
-  theme(panel.border = element_blank(), plot.title.position = 'plot') +
-  coord_flip()
+    geom_hline(yintercept = median(data$value), linetype = 'dashed', color = zcol[1], lwd = 0.8) +
+    ggplot2::annotate(geom = 'text', x = 2, y = median(data$value),
+                      label = paste('median: ', round(median(data$value), 2)),
+                      vjust = 2, hjust = -0.1, size = 3) +
+    labs(caption = sub) +
+    theme(panel.border = element_blank(), plot.title.position = 'plot') +
+    coord_flip()
   
   return(p)
 }

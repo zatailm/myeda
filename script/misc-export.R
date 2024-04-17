@@ -34,7 +34,9 @@ close(file_conn)
 
 # export plot ---------------------------------------------------------------------------------
 
-png(filename = "barevfat.png", width = 7.48, height = 2.667, units = "in", res = 300)
+png(filename = "data/barevfat.png", width = 7.48, height = 3.2, units = "in", res = 300)
 print(p_compare_reg)
 dev.off()
 
+# make sure both quoted and unquoted arguments are allowed
+# c(x, y) %<-% c(ensym(x), ensym(y))
