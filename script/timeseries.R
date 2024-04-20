@@ -261,120 +261,106 @@ pbhd <- (pbx + space +
               space / (plotsh[[1]]$p) + layh2)) + 
   plot_layout(width = c(5, .25, 3.5))
 
-##---------------------------------------------------------------------------------- BREAKPOINTS
+# BREAKPOINTS ---------------------------------------------------------------------------------
 
-cb2d <- function(cp, sd = as.Date("2015-01-03")) {
-  y <- as.integer(cp)
-  d <- as.integer((cp - y) * 365)
-  sd + years(y - 2015) + days(d)
+# Convert decimal date to YMD
+fun.dectodate <- function(dec.date, min.year = 2015, start.date = as.Date('2015-01-03')){
+  year <- as.integer(dec.date)
+  day <- as.integer((dec.date - year) * 365)
+  date <- start.date + lubridate::years(year - min.year) + lubridate::days(day)
+  return(date)
 }
 
-gl <- function(db) {
-  sapply(db, function(d) {
-    d <- as.Date(d)
-    y <- year(d)
-    m <- month(d)
-    w <- week(d) - week(floor_date(d, "month")) + 1
-    paste("Y:", y, ", M:", m, ", W:", w)
+# Get label YMW
+fun.getlabel <- function(date_vector) {
+  sapply(date_vector, function(date) {
+    date  <- as.Date(date)
+    year  <- lubridate::year(date)
+    month <- lubridate::month(date)
+    week  <- lubridate::week(date) - lubridate::week(lubridate::floor_date(date, "month")) + 1
+    ymw <- paste(year, "-", month, "-", "W", week)
+    ymw <- gsub(" ", "", ymw)
+    return(ymw)
   })
 }
 
-rb <- function(d, t) {
-  beast_res <- beast(d, quite = TRUE, print.progress = FALSE, print.options = FALSE)
-  beast_df <- data.frame(
-    time = beast_res$time,
-    data = d,
-    trend = beast_res$trend$Y,
-    cpoc = beast_res$trend$cpOccPr
-  )
-  
-  breakdata <- data.frame(cp = beast_res$trend$cp, cpPr = beast_res$trend$cpPr) %>%
-    filter(!is.na(cp))
-  
-  cpmode <- round(beast_res$trend$ncp)
-  sel_cp <- breakdata[1:cpmode, ]
-  cp <- sel_cp$cp
+# Run RBeast and extract its result
+fun.rbeast <- function(data, type) {
+  set.seed(123)
+  beast_res <- beast(data, quiet = TRUE, print.progress = FALSE, print.options = FALSE)
+  beast_df  <- data.frame(time = beast_res$time, 
+                          data = data, 
+                          trend = beast_res$trend$Y,
+                          cpoc = beast_res$trend$cpOccPr)
+  breakdata <- data.frame(cp = beast_res$trend$cp, 
+                          cpPr = beast_res$trend$cpPr) |> dplyr::filter(!is.na(cp))
+  cpmode      <- beast_res$trend$ncp_mode
+  select_cp   <- breakdata[1:cpmode, ]
+  changepoint <- select_cp$cp
   beast_df$isbreak <- "No"
-  closest_indices <- sapply(cp, function(x) which.min(abs(beast_df$time - x)))
+  closest_indices  <- sapply(changepoint, function(x) which.min(abs(beast_df$time - x)))
   beast_df$isbreak[closest_indices] <- "Yes"
-  beast_df$type <- t
-  dat_break <- cb2d(cp)
-  datbreak_label <- gl(dat_break)
+  beast_df$type  <- type
+  dat_break      <- fun.dectodate(changepoint)
+  datbreak_label <- fun.getlabel(dat_break)
   list(breakdata = breakdata, datbreak = dat_break, data = beast_df)
 }
 
-set.seed(123)
-tlist <- list()
-for (i in 3:8) {tlist[[i]] <- rb(mtss[,i], colnames(mtss)[i])$data}
-df_beast_breaks_type <- bind_rows(tlist)
-set.seed(123)
-mlist <- list()
-for (i in 1:2) {mlist[[i]] <- rb(wtss[,i], colnames(wtss)[i])$data}
-df_beast_breaks <- bind_rows(mlist)
-
-scan.break <- function(x) {
+fun.plot.break <- function(x) {
   p <- ggplot(data = x, aes(x = time)) +
-    geom_point(aes(y = data), color = zcol[6], alpha = .5, size = .7) +
-    geom_line(aes(y = trend), lwd= .7) +
+    geom_point(aes(y = data), color = zcol[6], alpha = .5) +
+    geom_line(aes(y = trend), lwd = .7) +
     geom_area(aes(y = cpoc * 1.5), fill = zcol[2], alpha = .5) +
-    geom_vline(data = filter(x, isbreak == 'Yes'), aes(xintercept = time),
-               linetype = 'longdash', lwd = .7, color = zcol[1]) +
+    geom_vline(
+      data = filter(x, isbreak == "Yes"), aes(xintercept = time),
+      linetype = "longdash", lwd = .7, color = zcol[1]
+    ) +
     scale_x_continuous(breaks = seq(2015, 2023, 2)) +
-    scale_y_continuous(sec.axis = sec_axis(~ . * .5, name = 'Probability')) +
-    theme(panel.spacing = unit(1,'lines'), legend.position = 'none') +
-    xlab('Time') + ylab('Value')
-  p
-}
-
-pmbhere <- scan.break(df_beast_breaks) + 
-  facet_wrap(~ type, scales = 'free_y', labeller = labeller(type = c(
-    'EVENT' = 'Events', 'FATAL' = 'Fatalities')))
-ptbhere <- scan.break(df_beast_breaks_type) + 
-  facet_wrap(~ type, scales = 'free_y', labeller = labeller(type = ren))
-
-#
-
-df_breakpoints <- df_beast_breaks %>% filter(type == 'EVENT')
-df_beast_breaks_evn <- df_beast_breaks %>% filter(type == 'EVENT') %>% filter(isbreak == 'Yes')
-
-sdat <- as.Date("2015-01-03")
-year <- as.integer(df_beast_breaks_evn$time)
-day <- as.integer((df_beast_breaks_evn$time - year) * 365)
-bdate <- sdat + lubridate::years(year - 2015) + lubridate::days(day)
-
-hasil <- c()
-for (i in bdate) {
-  i <- as.Date(i)
-  y <- lubridate::year(i)
-  m <- lubridate::month(i)
-  w <- lubridate::week(i) - lubridate::week(floor_date(i, "month")) + 1
-  hasil <- c(hasil, paste(y, '-', m, '-', "W", w))
+    scale_y_continuous(sec.axis = sec_axis(~ . * .5, name = "Probability")) +
+    theme(panel.spacing = unit(1, "lines"), legend.position = "none") +
+    labs(x = 'Year', y = 'Value')
   
+  return(p)
 }
-hasil <- gsub(" ", "", hasil)
-df_beast_breaks_evn$week_str = hasil
 
-pstrbrk <- ggplot(df_breakpoints, aes(x = time)) +
-  geom_point(aes(y = data), color = zcol[6], alpha = .5, size = .7) +
-  geom_line(aes(y = trend), color = 'black', lwd = .7) +
-  geom_vline(data = df_beast_breaks_evn, aes(xintercept = time), linetype = "longdash", 
-             color = zcol[1], lwd = .7) +
-  geom_area(aes(y = cpoc * 5.5), fill = zcol[2], alpha = .5) +
-  scale_x_continuous(breaks = seq(2015, 2023, 2)) +
-  scale_y_continuous(sec.axis = sec_axis(~ . * .5, name = 'Probability')) +
-  ggplot2::annotate(geom = "label", x = df_beast_breaks_evn$time[1], y =  max(df_breakpoints$data)-.5,
-                    label = paste(hasil[1]), vjust = .5, hjust = .5,
-                    color = zcol[1], size = 2.5, fill = 'white') +
-  ggplot2::annotate(geom = "label", x = df_beast_breaks_evn$time[2], y = max(df_breakpoints$data)-.5,
-                    label = paste(hasil[2]), vjust = .5, hjust = .5,
-                    color = zcol[1], size = 2.5, fill = 'white') +
-  ggplot2::annotate(geom = "label", x = df_beast_breaks_evn$time[3], y = max(df_breakpoints$data)-.5,
-                    label = paste(hasil[3]), vjust = .5, hjust = .5,
-                    color = zcol[1], size = 2.5, fill = 'white') +
-  labs(title = NULL, x = 'Time', y = 'Value') 
+# Processing weekly tine series by event and fatalities
+list_evnfat <- list()
+for (i in 1:2) {
+  result <- fun.rbeast(tsw[, i], colnames(tsw)[i])
+  list_evnfat[[i]] <- result$data
+}
 
-mod <- 'ABBBC'
-pmainstrbrk <- space + pstrbrk + space + plot_layout(design = mod)
+df_brk_evnfat <- dplyr::bind_rows(list_evnfat)
+
+# Processing monthly time series by event type
+list_evntyp <- list()
+for (i in 3:8) {
+  result <- fun.rbeast(tsb[, i], colnames(tsb)[i])
+  list_evntyp[[i]] <- result$data
+} 
+
+df_brk_typ <- dplyr::bind_rows(list_evntyp)
+
+evnbdate <- filter(list_evnfat[[1]], isbreak == 'Yes')
+evnbdate$week_str <- fun.getlabel(fun.dectodate(evnbdate$time))
+
+p_evn_brk <- fun.plot.break(list_evnfat[[1]]) + 
+  ggplot2::annotate(
+    geom = "label", x = evnbdate$time[1], y = max(list_evnfat[[1]]$data) - .5,
+    label = sprintf(evnbdate[1, 'week_str']), vjust = .5, hjust = .5,
+    color = zcol[1], size = 2.5, fill = "white") +
+  ggplot2::annotate(
+    geom = "label", x = evnbdate$time[2], y = max(list_evnfat[[1]]$data) - .5,
+    label = sprintf(evnbdate[2, 'week_str']), vjust = .5, hjust = .5,
+    color = zcol[1], size = 2.5, fill = "white") +
+  ggplot2::annotate(
+    geom = "label", x = evnbdate$time[3], y = max(list_evnfat[[1]]$data) - .5,
+    label = sprintf(evnbdate[3, 'week_str']), vjust = .5, hjust = .5,
+    color = zcol[1], size = 2.5, fill = "white")
+
+p_evn_brk_adjst <- space + p_evn_brk + space + plot_layout(design = 'ABBBC')
+p_typ_brk <- fun.plot.break(df_brk_typ) + facet_wrap(~ type, scale = 'free_y', 
+                                                     labeller = labeller(type = ren))
 
 ##------------------------------------------------------------------------- ANOMALIES & OUTLIERS
 

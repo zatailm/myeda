@@ -140,55 +140,42 @@ p_geo_fat <- map.plot(
 
 # comparing event and fatalities plot ---------------------------------------------------------
 
-com.plot <- function(data, x, y1, y2, abr = TRUE) {
-  st_evn <- ggdotplotstats(data, y = {{x}}, x = {{y1}}, type = 'nonparametric') %>% extract_subtitle()
-  st_fat <- ggdotplotstats(data, y = {{x}}, x = {{y2}}, type = 'nonparametric') %>% extract_subtitle()
+fun.compare <- function(source, var_a, var_b) {
+  df <- source |>
+    group_by({{var_a}}) |>
+    summarise(val_1 = n(), val_2 = sum({{var_b}}), .groups = 'drop_last') |>
+    'colnames<-'(c('var', 'val_1', 'val_2')) |>
+    as.data.frame()
   
-  me_evn <- substitute(Me[italic("Event")] == value, list(value = median(data[[deparse(substitute(y1))]])))
-  me_fat <- substitute(Me[italic("Fatalities")] == value, list(value = median(data[[deparse(substitute(y1))]])))
-  cap_com <- bquote(atop(.(me_evn) ~ ' || ' ~ .(me_fat), ~ "Events:" ~ .(st_evn) ~ ' || ' ~ "Fatalities:" ~ .(st_fat)))
-  # cap <- bquote("Events:" ~ .(cape) ~ ' || ' ~ "Fatalities:" ~ .(capf)) # 1 line
+  e <- ggdotplotstats(df, y = var, x = val_1, type = 'nonparametric') |> extract_subtitle()
+  f <- ggdotplotstats(df, y = var, x = val_2, type = 'nonparametric') |> extract_subtitle()
   
-  p <- data %>%
-    ggplot(aes(x = {{ x }})) +
-    geom_col(aes(y = sqrt({{ y1 }}), fill = "Events"), position = "identity", width = .6) +
-    geom_col(aes(y = -sqrt({{ y2 }}), fill = "Fatalities"),
-             position = "identity",
-             width = .6
-    ) +
-    geom_text(aes(y = sqrt({{ y1 }}) + .1, label = {{ y1 }}),
-              position = "identity",
-              size = 2.5, hjust = -.3, vjust = .4, angle = 90
-    ) +
-    geom_text(aes(y = -sqrt({{ y2 }}) - .1, label = {{ y2 }}),
-              position = "identity",
-              size = 2.5, hjust = 1.3, vjust = .4, angle = 90
-    ) +
-    # geom_hline(yintercept = sqrt(median(data[[deparse(substitute(y1))]])), linetype = 'aa', color = 'red') +
-    # geom_hline(yintercept = -sqrt(median(data[[deparse(substitute(y2))]])), linetype = 'aa', color = 'blue') +
+  me_1 <- substitute(Me[italic('Event')] == value,
+                     list(value = median(df[[deparse(substitute(val_1))]])))
+  me_2 <- substitute(Me[italic('Fatalities')] == value,
+                     list(value = median(df[[deparse(substitute(val_2))]])))
+  cap <- bquote(atop(.(me_1) ~ ' || ' ~ .(me_2), ~ "Events:" ~ .(e) ~ ' || ' ~ "Fatalities:" ~ .(f)))
+  
+  p <- df |>
+    ggplot(aes(x = var)) +
+    geom_col(aes(y = sqrt(val_1), fill = 'Event'), position = 'identity', width = .6) +
+    geom_col(aes(y = -sqrt(val_2), fill = 'Fatalities'), position = 'identity', width = .6) +
+    geom_text(aes(y = sqrt(val_1) + .1, label = val_1), position = 'identity', angle = 90,
+              size = 2.5, vjust = .4, hjust = -.3) +
+    geom_text(aes(y = -sqrt(val_2) - .1, label = val_2), position = 'identity', angle = 90,
+              size = 2.5, vjust = .4, hjust = 1.3) +
     scale_y_continuous(expand = expansion(mult = c(.2, .25))) +
-    theme(panel.border = element_blank(), panel.grid.major.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_blank(),
-          axis.text.y = element_blank(), plot.caption = element_text(hjust = .5)) +
-    scale_fill_manual(
-      values = c("Events" = "#3e4a89", "Fatalities" = "#fca636"),
-      guide = guide_legend(title = 'Category')
-    ) +
-    labs(x = l$prab, caption = cap_com)
+    theme(panel.border = element_blank(), panel.grid.major.y = element_blank(), axis.title.y =
+            element_blank(), axis.ticks.y = element_blank(), axis.text.y = element_blank(),
+          plot.caption = element_text(hjust = .5)) +
+    scale_fill_manual(values = c('Event' = '#3e4a89', 'Fatalities' = '#fca636'), guide =
+                        guide_legend(title = 'Category')) +
+    labs(x = l$prab, caption = cap)
   
-  if (abr) {
-    return(p)
-  } else {
-    p <- p + theme_zata(text.x.dir = 'vertical')
-  }
   return(p)
 }
 
-df_cum_evnfat <- acled %>%
-  group_by(ADMIN1_ABR, ADMINID) %>%
-  summarise(Event = n(), Fatalities = sum(FATALITIES), .groups = 'drop') %>%
-  as.data.frame()
-
-p_compare_reg <- com.plot(data = df_cum_evnfat, x = ADMIN1_ABR, y1 = Event, y2 = Fatalities)
+p_compare_reg <- fun.compare(source = acled, var_a = ADMIN1_ABR, var_b = FATALITIES)
 
 # comparing events and fatalities based on cluster --------------------------------------------
 

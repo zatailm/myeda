@@ -23,6 +23,7 @@ load_mypkg(packages)
 
 theme_set(theme_zata(base.size = 9, leg.pos = 'top', leg.jus = 'left', strip.bg = NA) +
             theme(
+              plot.title = element_text(size = 8, face = 'bold'),
               axis.title = element_text(size = 8),
-              strip.text = element_text(face = 'bold', size = 8)
+              strip.text = element_text(size = 8, face = 'bold')
             ))
