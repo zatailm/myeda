@@ -16,22 +16,6 @@ Repositori ini berfungsi sebagai tempat penyimpanan sementara untuk sumber R Mar
 
 4. **Visualisasi**: Hasil analisis akan divisualisasikan dalam bentuk grafik, peta, dan visualisasi lainnya untuk membantu memahami dan mengkomunikasikan temuan-temuan.
 
-## Fitur Analisis yang Telah Dikerjakan
-
-1. **Analisis Time Series**
-  - Timeseries plot
-- Dekomposisi: trend utama dan musiman
-- Forecasting dengan berbagai model
-- Structural breaks (breakpoints)
-- Anomali dan Outliers
-
-2. **Analisis Distribusi atau Proporsi**
-  - Distribusi kuantitatif dan kategorikal melalui berbagai grafik untuk melihat dari berbagai sudut pandang yang berbeda.
-
-3. **Analisis Korelasi**
-  - Autokorelasi spasial
-- Korelasi antar variabel (aktor, lokasi, jenis konflik, catatan insiden, dan korban jiwa)
-
 ## Informasi Tambahan
 
 Jika Anda memiliki pertanyaan atau saran, jangan ragu untuk menghubungi saya melalui surel di [inizata@gmail.com](mailto:inizata@gmail.com).
