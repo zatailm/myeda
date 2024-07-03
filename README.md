@@ -4,7 +4,7 @@
   
 ![Data](data/barevfat.png)
 
-Repositori ini berfungsi sebagai tempat penyimpanan sementara untuk sumber R Markdown dalam rangka penyusunan laporan penelitian "Analisis Eksploratif Konflik di Indonesia (2015-2023): Kajian Data ACLED". Tujuan utama proyek ini adalah menganalisis data konflik yang terjadi di Indonesia dari 1 Januari 2015 hingga setidaknya 31 Desember 2023 menggunakan data dari Armed Conflict Location & Event Data Project (ACLED). Analisis ini bertujuan untuk mengeksplorasi pola, tren, dan karakteristik konflik yang terjadi di Indonesia selama periode waktu tersebut. Proyek ini akan dilakukan dengan menggunakan bahasa pemrograman R. Dataset saat ini memiliki 14.658 baris dan 31 kolom data (per 1 Januari 2015 - 31 Desember 2023).
+Repositori ini berfungsi sebagai tempat penyimpanan sementara untuk sumber R Markdown dalam rangka penyusunan laporan penelitian "Analisis Eksploratif Konflik di Indonesia (2015-2023): Kajian Data ACLED". Tujuan utama proyek ini adalah menganalisis data konflik yang terjadi di Indonesia dari 1 Januari 2015 hingga setidaknya 31 Desember 2023 menggunakan data dari Armed Conflict Location & Event Data Project (ACLED), mengeksplorasi pola, tren, dan karakteristik konflik yang terjadi di Indonesia selama periode waktu tersebut. Proyek ini akan dilakukan dengan menggunakan bahasa pemrograman R. Dataset saat ini memiliki 14.658 baris dan 31 kolom data (per 1 Januari 2015 - 31 Desember 2023).
 
 ## Langkah Analisis Data
 
