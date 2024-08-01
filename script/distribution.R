@@ -36,8 +36,9 @@ do.scan <- function(data) {
 compare <- function(data, clean = TRUE) {
   p <- ggplot(data = data, aes(x = Metric, y = Count, fill = Metric)) +
     geom_bar(stat = "identity", width = .7) +
-    geom_text(aes(label = Count), hjust = -.2, size = 2.7) +
+    geom_text(aes(label = Count), vjust = .25, hjust = -.2, size = 2.7) +
     scale_y_continuous(trans = "log1p", expand = expansion(mult = c(0, .2))) +
+    theme(panel.border = element_blank(), axis.ticks = element_blank()) +
     scale_fill_zata() +
     coord_flip()
   if (clean) {
@@ -141,22 +142,26 @@ p_geo_fat <- map.plot(
 # comparing event and fatalities plot ---------------------------------------------------------
 
 fun.compare <- function(source, var_a, var_b) {
-  df <- source |>
-    group_by({{var_a}}) |>
-    summarise(val_1 = n(), val_2 = sum({{var_b}}), .groups = 'drop_last') |>
-    'colnames<-'(c('var', 'val_1', 'val_2')) |>
+  # 1. Membuat ringkasan data
+  summary_df <- source %>%
+    group_by({{var_a}}) %>%
+    summarise(val_1 = n(), val_2 = sum({{var_b}}), .groups = 'drop') %>%
+    rename(var = {{var_a}}) %>%
     as.data.frame()
   
-  e <- ggdotplotstats(df, y = var, x = val_1, type = 'nonparametric') |> extract_subtitle()
-  f <- ggdotplotstats(df, y = var, x = val_2, type = 'nonparametric') |> extract_subtitle()
+  # 2. Mendapatkan subtitle untuk plot
+  e <- ggdotplotstats(summary_df, y = var, x = val_1, type = 'nonparametric') %>%
+    extract_subtitle()
+  f <- ggdotplotstats(summary_df, y = var, x = val_2, type = 'nonparametric') %>%
+    extract_subtitle()
   
-  me_1 <- substitute(Me[italic('Event')] == value,
-                     list(value = median(df[[deparse(substitute(val_1))]])))
-  me_2 <- substitute(Me[italic('Fatalities')] == value,
-                     list(value = median(df[[deparse(substitute(val_2))]])))
-  cap <- bquote(atop(.(me_1) ~ ' || ' ~ .(me_2), ~ "Events:" ~ .(e) ~ ' || ' ~ "Fatalities:" ~ .(f)))
+  # 3. Membuat caption
+  caption <- bquote(atop(Me[italic('Event')] == .(median(summary_df$val_1)) ~ ' || ' ~ 
+                           Me[italic('Fatalities')] == .(median(summary_df$val_2)),
+                         ~ "Events:" ~ .(e) ~ ' || ' ~ "Fatalities:" ~ .(f)))
   
-  p <- df |>
+  # 4. Membuat plot
+  plot <- summary_df %>%
     ggplot(aes(x = var)) +
     geom_col(aes(y = sqrt(val_1), fill = 'Event'), position = 'identity', width = .6) +
     geom_col(aes(y = -sqrt(val_2), fill = 'Fatalities'), position = 'identity', width = .6) +
@@ -170,9 +175,9 @@ fun.compare <- function(source, var_a, var_b) {
           plot.caption = element_text(hjust = .5)) +
     scale_fill_manual(values = c('Event' = '#3e4a89', 'Fatalities' = '#fca636'), guide =
                         guide_legend(title = 'Category')) +
-    labs(x = l$prab, caption = cap)
+    labs(x = l$prab, caption = caption)
   
-  return(p)
+  return(plot)
 }
 
 p_compare_reg <- fun.compare(source = acled, var_a = ADMIN1_ABR, var_b = FATALITIES)

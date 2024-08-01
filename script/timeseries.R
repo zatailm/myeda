@@ -1,54 +1,5 @@
-##---------------------------------------------------------------------------------------PREAM
 
-do.scan <- function(data) {
-  column_types <- sapply(data, function(col) {
-    if (is.factor(col) || is.character(col))
-      "discrete"
-    else if (is.numeric(col))
-      "continuous"
-    else "other"
-  })
-  num_discrete_columns <- sum(column_types == "discrete")
-  num_continuous_columns <- sum(column_types == "continuous")
-  missing_columns <- sum(colSums(is.na(data)) > 0)
-  complete_rows <- sum(complete.cases(data))
-  missing_observations <- sum(is.na(data))
-  num_columns_in_dataset <- ncol(data)
-  num_rows_in_dataset <- nrow(data)
-  results_data <- data.frame(
-    Metric = c("Discrete Columns", "Continuous Columns",
-               "Missing Columns", "Complete Rows", "Missing Observations", "Number of Columns",
-               "Number of Rows"), 
-    Count = c(num_discrete_columns, num_continuous_columns, 
-              missing_columns, complete_rows, missing_observations, num_columns_in_dataset,
-              num_rows_in_dataset))
-  return(results_data)
-}
-
-compare <- function(data, clean = TRUE) {
-  p <- ggplot(data = data, aes(x = Metric, y = Count, fill = Metric)) +
-    geom_bar(stat = 'identity', width = .7) +
-    geom_text(aes(label = Count), hjust = -.2, size = 2.7) +
-    scale_y_continuous(trans = 'log1p', expand = expansion(mult = c(0, .2))) +
-    scale_fill_zata() +
-    theme(legend.position = 'none', plot.title.position = 'plot',
-          axis.text.x = element_blank(), axis.line.x = element_blank(),
-          panel.grid.major.x = element_blank()) +
-    coord_flip()
-  if (clean) {
-    p <- p + theme(axis.text.y = element_blank()) + 
-      labs(x = NULL, y = NULL, title = 'Dataset Characteristics (Processed)', 
-           caption = 'Logarithmic scaled bar')
-  } else {
-    p <- p + labs(x = NULL, y = NULL, title = 'Dataset Characteristics (Pre-processed)')
-  }
-  return(p)
-}
-
-p_raw <- compare(do.scan(df_acled_raw), clean = FALSE)
-p_clean <- compare(do.scan(acled))
-
-##---------------------------------------------------------------------------------------CONFIG
+# Preparing -----------------------------------------------------------------------------------
 
 dts  <- ts_daily[, 1]
 wts  <- tsx
@@ -65,20 +16,20 @@ ren <- c("EBAT" = "Battles",
          "ESTR" = "Strategic Developments",
          "EVAC" = "Violence Against Civilians")
 
-##---------------------------------------------------------------------------------------TS PLOT
+# Timeseries plot -----------------------------------------------------------------------------
 
-pts <- function(data, tit, cap, ylab) {
+fun.tsplot <- function(data, tit, cap, ylab) {
   ggplot(data = data, aes(x = index(data), y = data)) +
     geom_line(lwd = .3, color = zcol[1]) +
     scale_x_continuous(breaks = seq(2015, 2023, 2)) +
     labs(title = tit, subtitle = NULL, caption = cap,  x = NULL, y = ylab)
 }
 
-pday    <- pts(dts, 'Non-Regulized Data', 'Time step: Daily, Method of aggregation: Sums', 'Event (Sums)')
-pwek    <- pts(wts, 'Regulized Data', 'Time step: weekly, Method of aggregation: Means', 'Event (Log1p)')
-ptdisp  <- pday + space + pwek + layw2
+pday <- fun.tsplot(dts, 'Non-Regulized Data', 'Time step: Daily, Method of aggregation: Sums', 'Event (Sums)')
+pwek <- fun.tsplot(wts, 'Regulized Data', 'Time step: weekly, Method of aggregation: Means', 'Event (Log1p)')
+ptdisp <- pday + space + pwek + layw2
 
-##--------------------------------------------------------------------------------------DECOMPOSE
+# Decomposing ---------------------------------------------------------------------------------
 
 declist <- list(
   decompose = function(x) decompose(x, type = 'multiplicative'),
@@ -98,7 +49,7 @@ df_datweek[['deco']]  <- dec$decompose$trend
 df_datweek[['stl']]   <- dec$stl$time.series[, 'trend']
 df_datweek[['mstl']]  <- dec$mstl[, 'Trend']
 
-ptrend <- function(value, cap, point = TRUE) {
+fun.trendplt <- function(value, cap, point = TRUE) {
   if (point) {
     p <- ggplot(data = df_datweek, aes(x = year, y = event)) +
       geom_point(color = zcol[6], size = .7, alpha = .5) + 
@@ -108,24 +59,25 @@ ptrend <- function(value, cap, point = TRUE) {
       geom_line(aes(y = value), color = zcol[1]) 
   }
   p + scale_x_continuous(breaks = seq(2015, 2023, 2)) + labs(x = NULL, y = NULL, caption = cap)
+  return(p)
 }
 
-pdex <- ptrend(df_datweek[, 2], 'Observed', point = FALSE)
-pmva <- ptrend(df_datweek[, 5], 'Moving Average')
-pstl <- ptrend(df_datweek[, 6], 'STL (LOESS)')
-ploe <- ptrend(df_datweek[, 4], 'LOESS (0.75)')
-ppws <- ptrend(df_datweek[, 3], 'Piecewise Linear')
+pdex <- fun.trendplt(df_datweek[, 2], 'Observed', point = FALSE)
+pmva <- fun.trendplt(df_datweek[, 5], 'Moving Average')
+pstl <- fun.trendplt(df_datweek[, 6], 'STL (LOESS)')
+ploe <- fun.trendplt(df_datweek[, 4], 'LOESS (0.75)')
+ppws <- fun.trendplt(df_datweek[, 3], 'Piecewise Linear')
 
 p1 <- pdex + space + pmva + plot_layout(width = c(4.4, .2, 2))
 p2 <- pstl + space + ploe + space + ppws + layw3
 pmtren <- p1 / space / p2 + layh2 
-pseasn <- ptrend(dec$stl$time.series[, 'seasonal'], 'Seasonal', point = FALSE)
-prmain <- ptrend(dec$stl$time.series[, 'remainder'], 'Remainder', point = FALSE)
+pseasn <- fun.trendplt(dec$stl$time.series[, 'seasonal'], 'Seasonal', point = FALSE)
+prmain <- fun.trendplt(dec$stl$time.series[, 'remainder'], 'Remainder', point = FALSE)
 
-##----------------------------------------------------------------------------EXTRA:SEASONALITY
+# Seasonality ---------------------------------------------------------------------------------
 
 df_mon_smooth <- data.frame(year = time(mtss), coredata(mtss[, 3:8]))
-df_smooth_mon <- df_mon_smooth %>% pivot_longer(cols = -year, names_to = "var", values_to = "value")
+df_smooth_mon <- df_mon_smooth |> pivot_longer(cols = -year, names_to = "var", values_to = "value")
 
 ptrent <- ggplot(df_smooth_mon, aes(x = year, y = value, color = var)) +
   geom_point(size = .7, color = zcol[6]) +
@@ -147,7 +99,7 @@ df_mon_evn <- data.frame(month = factor(rep(month.abb, length.out = length(mts))
                   value = c(mts))
 df_wek_evn <- data.frame(week = rep(1:51, each = ceiling(467/51), length.out = 467), value = wts)
 
-pboxsea <- function(data, time) {
+fun.boxseasn <- function(data, time) {
   if (identical(data, df_wek_evn)) {
     p <- ggplot(data = data, aes(x = factor({{time}}), y = value)) +
       geom_boxplot(lwd = 0.3, color = my_cols[1]) +
@@ -165,17 +117,18 @@ pboxsea <- function(data, time) {
   return(p)
 }
 
-pbseay <- pboxsea(df_yer_evn, df_yer_evn[,1])
-pbseam <- pboxsea(df_mon_evn, df_mon_evn[,1])
-pbseaw <- pboxsea(df_wek_evn, df_wek_evn[,1])
+pbseay <- fun.boxseasn(df_yer_evn, df_yer_evn[,1])
+pbseam <- fun.boxseasn(df_mon_evn, df_mon_evn[,1])
+pbseaw <- fun.boxseasn(df_wek_evn, df_wek_evn[,1])
 pbs <- ptm / pbseam
 pseason <- (psea + plot_layout(guides = 'keep') & theme(legend.position = 'right')) | pbs + layw2
 
-##------------------------------------------------------------------------- SPECTRUM, ACF & PACF
+# Spectrum, ACF, PACF -------------------------------------------------------------------------
 
 spec_analysis <- spec.pgram(mts, spans = 10, kernel = "daniell", taper = 0.1, pad = 0, 
                             fast = TRUE, demean = FALSE, detrend = FALSE, plot = FALSE)
 df_spectrum <- data.frame(frequency = spec_analysis$freq, spectrum = spec_analysis$spec)
+
 p_spec <- ggplot(df_spectrum, aes(x = frequency, y = spectrum)) +
   geom_line(lwd = .3, color = zcol[2]) +
   scale_y_continuous(trans = "log", breaks = trans_breaks("log", function(x) exp(x)),
@@ -184,16 +137,16 @@ p_spec <- ggplot(df_spectrum, aes(x = frequency, y = spectrum)) +
   geom_vline(aes(xintercept = 1/7), color = zcol[1], linetype = 'longdash') +
   labs(x = "Frequency", y = "Amplitude", title = NULL) 
 
-extract_acf_data <- function(x) {
+fun.acf <- function(x) {
   data <- as.data.frame.table(x$acf)[-1]
   data$lag <- as.numeric(x$lag)
   return(data)
 }
 
 acf_est <- acf(mts, plot = FALSE)
-df_acf <- extract_acf_data(acf_est)
+df_acf <- fun.acf(acf_est)
 pacf_est <- pacf(mts, plot = FALSE)
-df_pacf <- extract_acf_data(pacf_est)
+df_pacf <- fun.acf(pacf_est)
 
 p.autocor <- function(est, data, title) {
   ci <- qnorm((1 + .95) / 2) / sqrt(est$n.used)
@@ -227,13 +180,13 @@ alpha <- 0.05
 df <- lag_max
 q_critical <- qchisq(1 - alpha, df = df)
 
-if (q_statistic > q_critical) {
-  print("Terdapat dependensi signifikan dalam data.")
-} else {
-  print("Tidak ada dependensi signifikan dalam data.")
-}
+# if (q_statistic > q_critical) {
+#   print("Terdapat dependensi signifikan dalam data.")
+# } else {
+#   print("Tidak ada dependensi signifikan dalam data.")
+# }
 
-##----------------------------------------------------------------------------- BOX, HIST & DENS 
+# Boxplot, histogram, density -----------------------------------------------------------------
 
 phd  <- ggplot(data = wts, aes(x = wts)) + labs(x = 'Event')
 df_ts_week <- data.frame(year = as.integer(time(wts)), val = as.vector(wts))
@@ -261,7 +214,7 @@ pbhd <- (pbx + space +
               space / (plotsh[[1]]$p) + layh2)) + 
   plot_layout(width = c(5, .25, 3.5))
 
-# BREAKPOINTS ---------------------------------------------------------------------------------
+# Breakpoints ---------------------------------------------------------------------------------
 
 # Convert decimal date to YMD
 fun.dectodate <- function(dec.date, min.year = 2015, start.date = as.Date('2015-01-03')){
@@ -362,7 +315,7 @@ p_evn_brk_adjst <- space + p_evn_brk + space + plot_layout(design = 'ABBBC')
 p_typ_brk <- fun.plot.break(df_brk_typ) + facet_wrap(~ type, scale = 'free_y', 
                                                      labeller = labeller(type = ren))
 
-##------------------------------------------------------------------------- ANOMALIES & OUTLIERS
+# Anomalies and outliers ----------------------------------------------------------------------
 
 df_weekly_ano <- as_tibble(data.frame(Date = df_weekly$Date, Events = wts))
 df_anomalize <- df_weekly_ano %>%
