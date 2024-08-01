@@ -4,7 +4,7 @@
   
 ![Data](data/barevfat.png)
 
-Repositori ini berfungsi sebagai tempat penyimpanan sementara untuk sumber R Markdown dalam rangka penyusunan laporan penelitian "Analisis Eksploratif Konflik di Indonesia (2015-2023): Kajian Data ACLED". Tujuan utama proyek ini adalah menganalisis data konflik yang terjadi di Indonesia dari 1 Januari 2015 hingga setidaknya 31 Desember 2023 menggunakan data dari Armed Conflict Location & Event Data Project (ACLED). Analisis ini bertujuan untuk mengeksplorasi pola, tren, dan karakteristik konflik yang terjadi di Indonesia selama periode waktu tersebut. Proyek ini akan dilakukan dengan menggunakan bahasa pemrograman R.
+Repositori ini berfungsi sebagai tempat penyimpanan sementara untuk sumber R Markdown dalam rangka penyusunan laporan penelitian "Analisis Eksploratif Konflik di Indonesia (2015-2023): Kajian Data ACLED". Tujuan utama proyek ini adalah menganalisis data konflik yang terjadi di Indonesia dari 1 Januari 2015 hingga setidaknya 31 Desember 2023 menggunakan data dari Armed Conflict Location & Event Data Project (ACLED), mengeksplorasi pola, tren, dan karakteristik konflik yang terjadi di Indonesia selama periode waktu tersebut. Proyek ini akan dilakukan dengan menggunakan bahasa pemrograman R. Dataset saat ini memiliki 14.658 baris dan 31 kolom data (per 1 Januari 2015 - 31 Desember 2023).
 
 ## Langkah Analisis Data
 
@@ -15,22 +15,6 @@ Repositori ini berfungsi sebagai tempat penyimpanan sementara untuk sumber R Mar
 3. **Analisis Statistik**: Berbagai teknik analisis statistik akan diterapkan untuk mengidentifikasi pola, tren, dan faktor-faktor yang berkaitan dengan konflik di Indonesia.
 
 4. **Visualisasi**: Hasil analisis akan divisualisasikan dalam bentuk grafik, peta, dan visualisasi lainnya untuk membantu memahami dan mengkomunikasikan temuan-temuan.
-
-## Fitur Analisis yang Telah Dikerjakan
-
-1. **Analisis Time Series**
-  - Timeseries plot
-- Dekomposisi: trend utama dan musiman
-- Forecasting dengan berbagai model
-- Structural breaks (breakpoints)
-- Anomali dan Outliers
-
-2. **Analisis Distribusi atau Proporsi**
-  - Distribusi kuantitatif dan kategorikal melalui berbagai grafik untuk melihat dari berbagai sudut pandang yang berbeda.
-
-3. **Analisis Korelasi**
-  - Autokorelasi spasial
-- Korelasi antar variabel (aktor, lokasi, jenis konflik, catatan insiden, dan korban jiwa)
 
 ## Informasi Tambahan
 
