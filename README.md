@@ -8,6 +8,10 @@ Repositori ini berfungsi sebagai tempat penyimpanan sementara untuk sumber R Mar
 
 ** Kemungkinan besar akan berlanjut untuk menggunakan data hingga Desember 2024.
 
+## Glympse
+Berikut beberapa visualisasi hasil analisis:
+![Glympse](data/glympse.jpg)
+
 ## Langkah Analisis Data
 
 1. **Pemrosesan Data**: Data ACLED akan diimpor dan dimuat ke dalam lingkungan R untuk diproses dan dipersiapkan sebelum analisis dimulai.
